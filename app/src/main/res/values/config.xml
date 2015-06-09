@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="discoverying_timeout">5000</integer>
+    <integer name="splash_timeout">3000</integer>
+    <integer name="drawerAnimtime">1500</integer>
+    <integer name="drawerAnimtime2">3000</integer>
+
+    <string name="app_url">http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/tv/index.html</string>
+    <string name="channel_id">com.samsung.trailmix</string>
+    <string name="playlist_url">https://s3.amazonaws.com/dev-multiscreen-video-library/trailers/library.json</string>
+</resources>
