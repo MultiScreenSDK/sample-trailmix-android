@@ -4,6 +4,16 @@ TrailMix is a demo app to demonstrate the how to integrate with MultiScreen-enab
 TVs using the MultiScreen Framework API. More information, including the application
 communication protocol can be found [here](https://github.com/MultiScreenSDK/trailmix-tv/blob/master/trailmix.md).
 
+## Android Studio Setup
+
+In addition to setting up your gradle project correctly, you need to add the Lombok IntelliJ plugin to add lombok support to Android Studio:
+
+1. Go to File > Settings > Plugins
+2. Click on Browse repositories...
+3. Search for Lombok Plugin
+4. Click on Install plugin
+5. Restart Android Studio
+
 ## Building
 
 The build requires [Gradle](http://www.gradle.org/downloads)
