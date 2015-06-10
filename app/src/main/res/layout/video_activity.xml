@@ -8,14 +8,16 @@
     android:layout_gravity="center_horizontal"
     tools:context=".ui.MainActivity" >
 
-    <!--<ListView-->
-        <!--android:id="@+id/libraryListView"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:divider="@null"-->
-        <!--android:dividerHeight="0dp"-->
-        <!--tools:listitem="@layout/library_list_item" />-->
+    <VideoView
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:background="@color/green">
+    </VideoView>
 
     <include layout="@layout/toolbar"
         android:layout_width="match_parent"

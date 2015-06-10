@@ -7,7 +7,7 @@
         android:id="@+id/action_connect"
         android:orderInCategory="100"
         android:title="@string/action_connect"
-        android:icon="@drawable/ic_connected_white_22"
+        android:icon="@drawable/ic_discovered_white"
         app:showAsAction="always"/>
 
 </menu>

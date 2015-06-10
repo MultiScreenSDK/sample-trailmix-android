@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.andexert.library.RippleView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/buttonRipple"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="0dp"
+    app:rv_color="@color/gray"
+    app:rv_rippleDuration="@android:integer/config_shortAnimTime" >
+
+    <LinearLayout
+        android:id="@+id/serviceItem"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingLeft="16dp"
+        android:background="@color/white"
+        android:clickable="true"
+        android:orientation="horizontal"
+        android:stateListAnimator="@anim/button_elevation" >
+
+        <ImageView
+            android:id="@+id/serviceIcon"
+            android:layout_width="36dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_tv_gray"/>
+
+        <TextView
+            android:id="@+id/serviceText"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:text="Shape"
+            android:textColor="@color/service_list_item"
+            android:textSize="16sp"/>
+
+    </LinearLayout>
+</com.andexert.library.RippleView>

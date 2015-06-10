@@ -1,0 +1,120 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/connect_width"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center"
+    android:padding="0dp" >
+
+    <LinearLayout
+        android:id="@+id/connectToLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:visibility="visible" >
+
+        <LinearLayout
+            android:id="@+id/connectToHeader"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/service_list_item_height"
+            android:layout_gravity="center_vertical"
+            android:background="@color/white"
+            android:fontFamily="@string/font_fontFamily_medium"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/connectToIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="16dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_discovered_gray" />
+
+            <TextView
+                android:id="@+id/connectToText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
+                android:paddingLeft="16dp"
+                android:text="@string/connect_to"
+                android:textColor="@color/connect_to_header_color"
+                android:textSize="18sp" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#D1D1D1" />
+
+        <ListView
+            android:id="@+id/deviceListView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:drawSelectorOnTop="true"
+            tools:listitem="@layout/service_list_item"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/selectedServiceLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:paddingTop="8dp"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/selectedServiceIcon"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_tv_gray" />
+
+        <TextView
+            android:id="@+id/selectedServiceText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingBottom="20dp"
+            android:paddingTop="8dp"
+            android:text="Samsung"
+            android:textColor="@color/connect_to_header_color"
+            android:textSize="18dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#D1D1D1" />
+
+        <com.andexert.library.RippleView
+            android:id="@+id/buttonRipple"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:padding="0dp"
+            app:rv_color="@color/gray">
+
+            <Button
+                android:id="@+id/disconnectButton"
+                style="@style/DefaultButtonStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="16dp"
+                android:paddingTop="16dp"
+                android:stateListAnimator="@anim/button_elevation"
+                android:text="Disconnect" />
+        </com.andexert.library.RippleView>
+
+    </LinearLayout>
+
+</RelativeLayout>
