@@ -34,8 +34,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.samsung.multiscreen.Service;
+import com.samsung.trailmix.R;
 import com.samsung.trailmix.multiscreen.MultiscreenManager;
 import com.samsung.trailmix.multiscreen.events.ServiceChangedEvent;
+import com.samsung.trailmix.util.Util;
 
 import java.util.ArrayList;
 
@@ -44,7 +46,7 @@ import de.greenrobot.event.EventBus;
 public class ServiceAdapter extends BaseAdapter {
 
     //The layout resource id.
-    private static final int layoutResourceId = 0;
+    private static final int layoutResourceId = R.layout.service_list_item;
     private static LayoutInflater inflater = null;
     private Context context;
 
@@ -117,8 +119,8 @@ public class ServiceAdapter extends BaseAdapter {
         if (row == null) {
             row = inflater.inflate(layoutResourceId, parent, false);
             ViewHolder holder = new ViewHolder();
-            //holder.deviceName = (TextView) row.findViewById(R.id.serviceText);
-            //holder.serviceIcon = (ImageView)row.findViewById(R.id.serviceIcon);
+            holder.deviceName = (TextView) row.findViewById(R.id.serviceText);
+            holder.serviceIcon = (ImageView)row.findViewById(R.id.serviceIcon);
             row.setTag(holder);
         }
 
@@ -127,13 +129,13 @@ public class ServiceAdapter extends BaseAdapter {
         final Service service = getItem(position);
 
         //Set the service name.
-        //holder.deviceName.setText(Util.getFriendlyTvName(service.getName()));
+        holder.deviceName.setText(Util.getFriendlyTvName(service.getName()));
 
         //Set the service icon according to the service type.
         if (MultiscreenManager.getInstance().getServiceType(service) == MultiscreenManager.ServiceType.Speaker) {
             //holder.serviceIcon.setImageResource(R.drawable.ic_speaker_gray);
         } else {
-            //holder.serviceIcon.setImageResource(R.drawable.ic_tv_gray);
+            holder.serviceIcon.setImageResource(R.drawable.ic_tv_gray);
         }
 
         return row;
