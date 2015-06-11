@@ -8,18 +8,82 @@
     android:layout_gravity="center_horizontal"
     tools:context=".ui.MainActivity" >
 
-    <!--<ListView-->
-        <!--android:id="@+id/libraryListView"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:divider="@null"-->
-        <!--android:dividerHeight="0dp"-->
-        <!--tools:listitem="@layout/library_list_item" />-->
-
-    <include layout="@layout/toolbar"
+    <include
+        android:id="@+id/toolbar"
+        layout="@layout/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true" />
+
+    <LinearLayout
+        android:id="@+id/playControlLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/toolbar"
+        android:background="@color/black"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="visible">
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:progress="100" />
+
+        <LinearLayout
+            android:id="@+id/playingLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingBottom="8dp"
+            android:paddingLeft="2dp"
+            android:paddingRight="16dp"
+            android:paddingTop="16dp">
+
+            <ImageView
+                android:id="@+id/playControl"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:clickable="true"
+                android:scaleType="fitCenter"
+                android:src="@drawable/play_control_dark" />
+
+            <TextView
+                android:id="@+id/playText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:ellipsize="end"
+                android:gravity="center_vertical"
+                android:lineSpacingExtra="4dp"
+                android:maxLines="2"
+                android:paddingLeft="8dp"
+                android:scrollHorizontally="true"
+                android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry."
+                android:textColor="@color/toolbar_color"
+                android:textSize="14sp"/>
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="3dp"
+            android:background="@color/white" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/libraryListView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/playControlLayout"
+        android:divider="@null"
+        android:dividerHeight="0dp"
+        tools:listitem="@layout/library_list_item" />
 
 </RelativeLayout>

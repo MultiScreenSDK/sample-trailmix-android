@@ -13,8 +13,7 @@
     <LinearLayout
         android:id="@+id/serviceItem"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:paddingLeft="16dp"
+        android:layout_height="@dimen/service_list_item_height"
         android:background="@color/white"
         android:clickable="true"
         android:orientation="horizontal"
@@ -22,18 +21,22 @@
 
         <ImageView
             android:id="@+id/serviceIcon"
-            android:layout_width="36dp"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:scaleType="fitCenter"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:scaleType="center"
+
             android:src="@drawable/ic_tv_gray"/>
 
         <TextView
             android:id="@+id/serviceText"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:ellipsize="end"
             android:gravity="center_vertical"
-            android:paddingLeft="16dp"
+            android:maxLines="1"
             android:paddingRight="16dp"
             android:text="Shape"
             android:textColor="@color/service_list_item"

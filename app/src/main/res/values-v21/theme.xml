@@ -2,8 +2,11 @@
 <resources>
 
     <style name="Widget.Styled.ActionBar" parent="@style/Widget.AppCompat.ActionBar.Solid">
-        <item name="background">@drawable/actionbar_background</item>
-        <item name="android:background">@drawable/actionbar_background</item>
+        <!--<item name="background">@drawable/actionbar_background</item>-->
+        <!--<item name="android:background">@drawable/actionbar_background</item>-->
+        <item name="android:paddingRight">2dp</item>
+        <item name="colorControlNormal">@color/toolbar_color</item>
+        <item name="android:colorControlNormal">@color/toolbar_color</item>
     </style>
 
     <style name="AppTheme" parent="Theme.AppCompat.Light">
@@ -26,6 +29,11 @@
 
         <item name="actionBarStyle">@style/Widget.Styled.ActionBar</item>
         <item name="android:actionBarStyle">@style/Widget.Styled.ActionBar</item>
+
+        <item name="actionBarTheme">@style/Widget.Styled.ActionBar</item>
+        <item name="android:actionBarTheme">@style/Widget.Styled.ActionBar</item>
+
+        <item name="android:seekBarStyle">@style/SeekBarAppTheme</item>
     </style>
 
     <style name="AppTheme.NoTitleBar" parent="AppTheme">
