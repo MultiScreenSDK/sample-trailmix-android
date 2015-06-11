@@ -32,11 +32,14 @@ import android.net.wifi.WifiManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.WindowManager;
+
+import com.google.gson.Gson;
 import com.samsung.trailmix.App;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 
 public class Util {
     //The debug tag.
@@ -97,27 +100,31 @@ public class Util {
 
 
     /**
-     * Read content from Url.
+     * Read Json content from Url.
      * @param urlString the url string.
-     * @return the content string.
+     * @param clazz the class of the target object.
+     * @return the Json object.
      * @throws Exception
      */
-    public static String readUrl(String urlString) throws Exception {
+    public static <T> T readJsonFromUrl(String urlString, Class<T> clazz) throws Exception {
+        T result = null;
         BufferedReader reader = null;
         try {
             URL url = new URL(urlString);
-            reader = new BufferedReader(new InputStreamReader(url.openStream()));
-            StringBuffer buffer = new StringBuffer();
-            int read;
-            char[] chars = new char[1024];
-            while ((read = reader.read(chars)) != -1)
-                buffer.append(chars, 0, read);
+            URLConnection urlConnection = url.openConnection();
 
-            return buffer.toString();
+            //Disable android cache.
+            urlConnection.setUseCaches(false);
+
+            reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            Gson gson = new Gson();
+            result = gson.fromJson(reader, clazz);
         } finally {
             if (reader != null)
                 reader.close();
         }
+
+        return result;
     }
 
     /**

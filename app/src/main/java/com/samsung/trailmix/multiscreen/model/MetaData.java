@@ -25,20 +25,23 @@
 package com.samsung.trailmix.multiscreen.model;
 
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-
 /**
  * The track model.
  */
-@Data
-@NoArgsConstructor
+//@Data
+//@NoArgsConstructor
 public class MetaData extends Base implements Cloneable {
-    private String id;
-    private String title;
-    private String file;
-    private int duration;
+//    private String id;
+//    private String title;
+//    private String file;
+//    private int duration;
+
+
+    public String id;
+    public String title;
+    public int duration;
+    public String file;
+
 
     @Override
     public Object clone() {
@@ -52,4 +55,37 @@ public class MetaData extends Base implements Cloneable {
         return o;
     }
 
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getFile() {
+        return file;
+    }
+
+    public void setFile(String file) {
+        this.file = file;
+    }
+
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public void setDuration(int duration) {
+        this.duration = duration;
+    }
 }
