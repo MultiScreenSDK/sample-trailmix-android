@@ -58,8 +58,8 @@ import de.greenrobot.event.EventBus;
  * Provides the Samsung MultiScreen functions.
  */
 public class MultiscreenManager {
-    public static final String APP_URL = "";
-    public static final String CHANNEL_ID = "";
+    public static final String APP_URL = "http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/tv/index.html";
+    public static final String CHANNEL_ID = "com.samsung.trailmix";
 
     public enum ServiceType {
         //Other unknown type
@@ -194,6 +194,14 @@ public class MultiscreenManager {
      */
     public boolean isDiscovering() {
         return (search != null && search.isSearching());
+    }
+
+    /**
+     * Check if the discovery process is stopping.
+     * @return true if it is stopping.
+     */
+    public boolean isStoppingDiscovery() {
+        return (search != null && search.isStopping());
     }
 
     /**
@@ -755,7 +763,9 @@ public class MultiscreenManager {
                 }
             } else if (android.net.ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
                 //WiFi is connected
-                startDiscovery();
+                if (Util.isWiFiConnected()) {
+                    startDiscovery();
+                }
             }
         }
     };

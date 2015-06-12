@@ -2,6 +2,7 @@
 
 package com.samsung.trailmix.ui;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -40,6 +41,7 @@ import com.google.android.exoplayer.metadata.TxxxMetadata;
 import com.google.android.exoplayer.util.Util;
 import com.samsung.trailmix.R;
 import com.samsung.trailmix.interceptor.AppCompatActivityMenuKeyInterceptor;
+import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.player.DemoUtil;
 import com.samsung.trailmix.player.EventLogger;
 import com.samsung.trailmix.player.SmoothStreamingTestMediaDrmCallback;
@@ -65,6 +67,9 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
 
     private long playerPosition;
     private boolean enableBackgroundAudio;
+
+    //The metadata to be played.
+    private MetaData metaData;
 
     private Uri contentUri;
     private int contentType;
@@ -94,6 +99,22 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        Intent intent = getIntent();
+        if (intent != null) {
+            String jstr = intent.getStringExtra("json");
+            if (jstr != null) {
+                metaData = MetaData.parse(jstr, MetaData.class);
+            }
+        }
+
+        //play default movide when no data is passed.
+        if (metaData == null) {
+            metaData = new MetaData();
+            metaData.setTitle("Jurassic World");
+            metaData.setDuration(133);
+            metaData.setFile("https://s3.amazonaws.com/dev-multiscreen-video-library/trailers/Avengers_2_trailer_3_51-1080p-HDTN.mp4");
+        }
     }
 
     @Override
@@ -187,9 +208,9 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
     private void preparePlayer() {
         if (player == null) {
             player = new DemoPlayer(getRendererBuilder());
-//            player.addListener(this);
-//            player.setTextListener(this);
-//            player.setMetadataListener(this);
+            player.addListener(this);
+            player.setTextListener(this);
+            player.setMetadataListener(this);
             player.seekTo(playerPosition);
             playerNeedsPrepare = true;
             mediaController.setMediaPlayer(player.getPlayerControl());
@@ -281,7 +302,7 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
     @Override
     public void onText(String text) {
         com.samsung.trailmix.util.Util.d("onText: " + text);
-        
+
         if (TextUtils.isEmpty(text)) {
             //subtitleView.setVisibility(View.INVISIBLE);
         } else {
