@@ -16,12 +16,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import com.samsung.trailmix.R;
 import com.samsung.trailmix.adapter.LibraryAdapter;
 import com.samsung.trailmix.interceptor.AppCompatActivityMenuKeyInterceptor;
 import com.samsung.trailmix.multiscreen.MultiscreenManager;
+import com.samsung.trailmix.multiscreen.events.AppStateEvent;
 import com.samsung.trailmix.multiscreen.events.ConnectionChangedEvent;
 import com.samsung.trailmix.multiscreen.events.ServiceChangedEvent;
 import com.samsung.trailmix.multiscreen.model.MetaData;
@@ -57,6 +59,9 @@ public class MainActivity extends AppCompatActivity {
     //The list view to display playlist.
     ListView libraryListView;
 
+    //The playback control panel.
+    LinearLayout playControlLayout;
+
     // Create a fixed thread pool containing one thread
     ExecutorService loadLibExecutor = Executors.newFixedThreadPool(1);
 
@@ -71,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
         //Add toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        //Playback control panel.
+        playControlLayout = (LinearLayout)findViewById(R.id.playControlLayout);
+        playControlLayout.setVisibility(View.GONE);
 
         //Register to receive events.
         EventBus.getDefault().register(this);
@@ -229,6 +238,9 @@ public class MainActivity extends AppCompatActivity {
 
             //When service is connected, we stop discovery.
             mMultiscreenManager.stopDiscovery();
+
+            //Send app state request when TV is connected.
+            mMultiscreenManager.requestAppState();
         } else if (event.errorMessage != null) {
             //Error happens.
             Util.e(event.errorMessage);
@@ -248,6 +260,13 @@ public class MainActivity extends AppCompatActivity {
     // This method will be called when a service is changed.
     public void onEvent(ServiceChangedEvent event) {
         updateUI();
+    }
+
+
+    // This method will be called when a app state event is recieved.
+    public void onEvent(AppStateEvent event) {
+        Util.d("MainActivity  AppStateEvent: " + event.status);
+        //updateUI();
     }
 
     public void displayConnectingMessage(String tvName) {

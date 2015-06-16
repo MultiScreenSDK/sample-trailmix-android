@@ -656,6 +656,8 @@ public class MultiscreenManager {
     private Channel.OnMessageListener onAppStateListener = new Channel.OnMessageListener() {
         @Override
         public void onMessage(Message message) {
+            Util.d("onAppStateListener = " + message.toString());
+
             if (message != null && message.getData() != null) {
                 String jsonString = JSONUtil.toJSONString((HashMap)message.getData());
                 EventBus.getDefault().post(new AppStateEvent(CurrentStatus.parse(jsonString, CurrentStatus.class)));
