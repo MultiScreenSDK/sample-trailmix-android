@@ -32,7 +32,7 @@
             android:layout_gravity="center"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
-            android:progress="100" />
+            android:progress="0" />
 
         <LinearLayout
             android:id="@+id/playingLayout"

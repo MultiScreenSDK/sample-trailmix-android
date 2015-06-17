@@ -55,6 +55,7 @@
                 android:value=".ui.MainActivity" />
 
         </activity>
+
     </application>
 
 </manifest>

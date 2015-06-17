@@ -39,8 +39,9 @@ import com.samsung.multiscreen.util.JSONUtil;
 import com.samsung.trailmix.App;
 import com.samsung.trailmix.multiscreen.events.AppStateEvent;
 import com.samsung.trailmix.multiscreen.events.ConnectionChangedEvent;
+import com.samsung.trailmix.multiscreen.events.PlaybackEvent;
 import com.samsung.trailmix.multiscreen.events.ServiceChangedEvent;
-import com.samsung.trailmix.multiscreen.events.TrackPlaybackEvent;
+import com.samsung.trailmix.multiscreen.events.VideoStatusEvent;
 import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.util.Util;
@@ -678,7 +679,7 @@ public class MultiscreenManager {
                 if (message.getData() instanceof HashMap) {
                     String jsonString = JSONUtil.toJSONString((HashMap)message.getData());
 
-                    //EventBus.getDefault().post(new TrackStatusEvent(CurrentStatus.parse(jsonString)));
+                    EventBus.getDefault().post(new VideoStatusEvent(CurrentStatus.parse(jsonString, CurrentStatus.class)));
                 }
             }
         }
@@ -693,7 +694,7 @@ public class MultiscreenManager {
             //Util.d("onVideoStartListener: " + message.toString());
 
             if (message != null && message.getData() != null) {
-                EventBus.getDefault().post(new TrackPlaybackEvent(message.getData().toString(),
+                EventBus.getDefault().post(new PlaybackEvent(message.getData().toString(),
                         message.getEvent()));
             }
         }
@@ -706,7 +707,7 @@ public class MultiscreenManager {
         @Override
         public void onMessage(Message message) {
             if (message != null && message.getData() != null) {
-                EventBus.getDefault().post(new  TrackPlaybackEvent(message.getData().toString(),
+                EventBus.getDefault().post(new PlaybackEvent(message.getData().toString(),
                         message.getEvent()));
             }
         }

@@ -6,7 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="@dimen/trailer_item_height"
     android:background="@android:color/transparent"
-    android:clickable="true"
     android:orientation="horizontal"
     android:stateListAnimator="@anim/button_elevation" >
 

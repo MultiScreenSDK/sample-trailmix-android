@@ -2,20 +2,21 @@
 
 package com.samsung.trailmix.ui;
 
+import android.annotation.TargetApi;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.TypedValue;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.view.Display;
 import android.view.SurfaceHolder;
 import android.view.View;
+import android.view.WindowManager;
+import android.view.accessibility.CaptioningManager;
 import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,9 +39,11 @@ import com.google.android.exoplayer.extractor.webm.WebmExtractor;
 import com.google.android.exoplayer.metadata.GeobMetadata;
 import com.google.android.exoplayer.metadata.PrivMetadata;
 import com.google.android.exoplayer.metadata.TxxxMetadata;
+import com.google.android.exoplayer.text.CaptionStyleCompat;
+import com.google.android.exoplayer.text.SubtitleView;
 import com.google.android.exoplayer.util.Util;
 import com.samsung.trailmix.R;
-import com.samsung.trailmix.interceptor.AppCompatActivityMenuKeyInterceptor;
+import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.player.DemoUtil;
 import com.samsung.trailmix.player.EventLogger;
@@ -53,14 +56,26 @@ import java.util.Map;
 /**
  * Activity for view videos
  */
-public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Callback, View.OnClickListener,
+public class VideoActivity extends BaseActivity implements SurfaceHolder.Callback, View.OnClickListener,
         DemoPlayer.Listener, DemoPlayer.TextListener, DemoPlayer.Id3MetadataListener,
         AudioCapabilitiesReceiver.Listener {
-    private Toolbar toolbar;
+
+    private static final float CAPTION_LINE_HEIGHT_RATIO = 0.0533f;
+
 
     private EventLogger eventLogger;
     private MediaController mediaController;
-    private VideoSurfaceView surfaceView;
+
+
+    private View debugRootView;
+    private View shutterView;
+    private TextView playerStateTextView;
+    private SubtitleView subtitleView;
+
+
+    //The view to render debug info.
+    private TextView debugTextView = null;
+
 
     private DemoPlayer player;
     private boolean playerNeedsPrepare;
@@ -71,73 +86,94 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
     //The metadata to be played.
     private MetaData metaData;
 
-    private Uri contentUri;
-    private int contentType;
-    private String contentId;
+    //The current playing state.
+    private CurrentStatus currentStatus;
+
 
     private AudioCapabilitiesReceiver audioCapabilitiesReceiver;
     private AudioCapabilities audioCapabilities;
 
-    //The view to render debug info.
-    private TextView debugTextView = null;
+    //the video to display video.
+    private VideoSurfaceView surfaceView;
+
+
+
+    //The app name or video name in the toolbar.
+    private TextView appText;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.video_activity);
 
-        //Initialize the interceptor
-        AppCompatActivityMenuKeyInterceptor.intercept(this);
+        //Set up toobar.
+        setupToolbar();
 
-        //Add toolbar
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        toolbar.setBackgroundColor(getResources().getColor(android.R.color.transparent));
-        toolbar.setBackgroundColor(Color.GRAY);
+        //Custom toolbar color
+        toolbar.setBackgroundColor(getResources().getColor(R.color.video_toolbar_background));
         TextView textView = (TextView)toolbar.findViewById(R.id.appText);
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         textView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
-        setSupportActionBar(toolbar);
+
+        appText = (TextView)findViewById(R.id.appText);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Intent intent = getIntent();
-        if (intent != null) {
-            String jstr = intent.getStringExtra("json");
-            if (jstr != null) {
-                metaData = MetaData.parse(jstr, MetaData.class);
-            }
-        }
+        //Read the video information
+        readPlaybackInfo();
 
-        //play default movide when no data is passed.
-        if (metaData == null) {
-            metaData = new MetaData();
-            metaData.setTitle("Jurassic World");
-            metaData.setDuration(133);
-            metaData.setFile("https://s3.amazonaws.com/dev-multiscreen-video-library/trailers/Avengers_2_trailer_3_51-1080p-HDTN.mp4");
-        }
+        //play default movie when no data is passed.
+        setDefaultValueIfNull();
+
+
+        View root = findViewById(R.id.root);
+        audioCapabilitiesReceiver = new AudioCapabilitiesReceiver(getApplicationContext(), this);
+
+        shutterView = findViewById(R.id.shutter);
+        debugRootView = findViewById(R.id.controls_root);
+
+        surfaceView = (VideoSurfaceView) findViewById(R.id.surface_view);
+        surfaceView.getHolder().addCallback(this);
+        debugTextView = (TextView) findViewById(R.id.debug_text_view);
+
+        playerStateTextView = (TextView) findViewById(R.id.player_state_view);
+        subtitleView = (SubtitleView) findViewById(R.id.subtitles);
+
+        mediaController = new MediaController(this);
+        mediaController.setAnchorView(root);
+
+        DemoUtil.setDefaultCookieManager();
+
+        updateUI();
     }
+
 
     @Override
     public void onConfigurationChanged(final Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
 
     @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_connect:
-                //When the S icon is clicked, opens the service list dialog.
-//                showServiceListDialog();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    public void onResume() {
+        super.onResume();
+        configureSubtitleView();
+
+        // The player will be prepared on receiving audio capabilities.
+        audioCapabilitiesReceiver.register();
+    }
+
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (!enableBackgroundAudio) {
+            releasePlayer();
+        } else {
+            player.setBackgrounded(true);
         }
+        audioCapabilitiesReceiver.unregister();
+        shutterView.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -151,7 +187,7 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
     @Override
     public void onClick(View view) {
         //if (view == retryButton) {
-        //    preparePlayer();
+//            preparePlayer();
         //}
     }
 
@@ -169,20 +205,95 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
         }
     }
 
+
+
+
     // Internal methods
 
+    private void readPlaybackInfo() {
+        Intent intent = getIntent();
+        if (intent != null) {
+            String jstr = intent.getStringExtra("meta");
+            if (jstr != null) {
+                try {
+                    //metaData = MetaData.parse(jstr, MetaData.class);
+
+
+                    //TODO: add temp as there is type to read.
+                    //metaData.setType(DemoUtil.TYPE_MP4);
+
+                    //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
+                }catch (Exception e){}
+            }
+
+            String status = intent.getStringExtra("status");
+            if (status != null) {
+                try {
+                    currentStatus = CurrentStatus.parse(status, CurrentStatus.class);
+
+
+                    //TODO: add temp as there is type to read.
+                    //metaData.setType(DemoUtil.TYPE_MP4);
+
+                    //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
+                }catch (Exception e){}
+            }
+        }
+    }
+
+    /**
+     * Use default value when no video information is passed.
+     */
+    private void setDefaultValueIfNull() {
+        //play default movie when no data is passed.
+        if (metaData == null) {
+            metaData = new MetaData();
+            metaData.setTitle("Big Buck Bunny (MP4 Video)");
+            metaData.setDuration(133);
+            metaData.setType(DemoUtil.TYPE_MP4);
+            metaData.setFile("http://redirector.c.youtube.com/videoplayback?id=604ed5ce52eda7ee&itag=22&source=youtube&"
+                    + "sparams=ip,ipbits,expire,source,id&ip=0.0.0.0&ipbits=0&expire=19000000000&signature="
+                    + "513F28C7FDCBEC60A66C86C9A393556C99DC47FB.04C88036EEE12565A1ED864A875A58F15D8B5300"
+                    + "&key=ik0");
+
+//            metaData.setType(DemoUtil.TYPE_DASH);
+//            metaData.setFile("http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
+//                    + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,source,id,as&ip=0.0.0.0&"
+//                    + "ipbits=0&expire=19000000000&signature=A2716F75795F5D2AF0E88962FFCD10DB79384F29."
+//                    + "84308FF04844498CE6FBCE4731507882B8307798&key=ik0");
+
+
+            //metaData.setType(DemoUtil.TYPE_HLS);
+            //metaData.setFile("https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8");
+        }
+
+        if (currentStatus == null) {
+            currentStatus = new CurrentStatus();
+            currentStatus.setId(metaData.getId());
+            currentStatus.setState(CurrentStatus.STATE_PLAYING);
+            currentStatus.setTime(0);
+        }
+    }
+
+    private void updateUI() {
+        appText.setText(metaData.getTitle());
+    }
 
     private DemoPlayer.RendererBuilder getRendererBuilder() {
-        String userAgent = Util.getUserAgent(this, "ExoPlayerDemo");
+        String userAgent = Util.getUserAgent(this, "TrailMix");
+
+        Uri contentUri = Uri.parse(metaData.getFile());
+        int contentType = metaData.getType();
+
         switch (contentType) {
             case DemoUtil.TYPE_SS:
-                return new SmoothStreamingRendererBuilder(this, userAgent, contentUri.toString(),
+                return new SmoothStreamingRendererBuilder(this, userAgent, metaData.getFile(),
                         new SmoothStreamingTestMediaDrmCallback(), debugTextView);
             case DemoUtil.TYPE_DASH:
-                return new DashRendererBuilder(this, userAgent, contentUri.toString(),
-                        new WidevineTestMediaDrmCallback(contentId), debugTextView, audioCapabilities);
+                return new DashRendererBuilder(this, userAgent, metaData.getFile(),
+                        new WidevineTestMediaDrmCallback(metaData.getTitle()), debugTextView, audioCapabilities);
             case DemoUtil.TYPE_HLS:
-                return new HlsRendererBuilder(this, userAgent, contentUri.toString(), debugTextView,
+                return new HlsRendererBuilder(this, userAgent, metaData.getFile(), debugTextView,
                         audioCapabilities);
             case DemoUtil.TYPE_M4A: // There are no file format differences between M4A and MP4.
             case DemoUtil.TYPE_MP4:
@@ -224,10 +335,13 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
         if (playerNeedsPrepare) {
             player.prepare();
             playerNeedsPrepare = false;
-//            updateButtonVisibilities();
+            updateButtonVisibilities();
         }
         player.setSurface(surfaceView.getHolder().getSurface());
         player.setPlayWhenReady(true);
+
+        //Play at the given position.
+        player.seekTo((long)currentStatus.getTime());
     }
 
     private void releasePlayer() {
@@ -240,13 +354,62 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
         }
     }
 
+    // User controls
+
+    private void updateButtonVisibilities() {
+//    retryButton.setVisibility(playerNeedsPrepare ? View.VISIBLE : View.GONE);
+//    videoButton.setVisibility(haveTracks(DemoPlayer.TYPE_VIDEO) ? View.VISIBLE : View.GONE);
+//    audioButton.setVisibility(haveTracks(DemoPlayer.TYPE_AUDIO) ? View.VISIBLE : View.GONE);
+//    textButton.setVisibility(haveTracks(DemoPlayer.TYPE_TEXT) ? View.VISIBLE : View.GONE);
+    }
+    private void showControls() {
+        mediaController.show(0);
+        debugRootView.setVisibility(View.VISIBLE);
+    }
+
+    private void configureSubtitleView() {
+        CaptionStyleCompat captionStyle;
+        float captionTextSize = getCaptionFontSize();
+        if (Util.SDK_INT >= 19) {
+            captionStyle = getUserCaptionStyleV19();
+            captionTextSize *= getUserCaptionFontScaleV19();
+        } else {
+            captionStyle = CaptionStyleCompat.DEFAULT;
+        }
+        subtitleView.setStyle(captionStyle);
+        subtitleView.setTextSize(captionTextSize);
+    }
+
+    private float getCaptionFontSize() {
+        Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE))
+                .getDefaultDisplay();
+        Point displaySize = new Point();
+        display.getSize(displaySize);
+//    return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
+//        CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
+        return CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y);
+    }
+
+    @TargetApi(19)
+    private float getUserCaptionFontScaleV19() {
+        CaptioningManager captioningManager =
+                (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
+        return captioningManager.getFontScale();
+    }
+
+    @TargetApi(19)
+    private CaptionStyleCompat getUserCaptionStyleV19() {
+        CaptioningManager captioningManager =
+                (CaptioningManager) getSystemService(Context.CAPTIONING_SERVICE);
+        return CaptionStyleCompat.createFromCaptionStyle(captioningManager.getUserStyle());
+    }
 
     // DemoPlayer.Listener implementation
 
     @Override
     public void onStateChanged(boolean playWhenReady, int playbackState) {
         if (playbackState == ExoPlayer.STATE_ENDED) {
-//            showControls();
+            showControls();
         }
         String text = "playWhenReady=" + playWhenReady + ", playbackState=";
         switch(playbackState) {
@@ -269,8 +432,11 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
                 text += "unknown";
                 break;
         }
-//        playerStateTextView.setText(text);
-//        updateButtonVisibilities();
+
+        com.samsung.trailmix.util.Util.d("onStateChanged: " + text);
+
+        playerStateTextView.setText(text);
+        updateButtonVisibilities();
     }
 
     @Override
@@ -286,13 +452,13 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
             Toast.makeText(getApplicationContext(), stringId, Toast.LENGTH_LONG).show();
         }
         playerNeedsPrepare = true;
-//        updateButtonVisibilities();
-//        showControls();
+        updateButtonVisibilities();
+        showControls();
     }
 
     @Override
     public void onVideoSizeChanged(int width, int height, float pixelWidthAspectRatio) {
-//        shutterView.setVisibility(View.GONE);
+        shutterView.setVisibility(View.GONE);
         surfaceView.setVideoWidthHeightRatio(
                 height == 0 ? 1 : (width * pixelWidthAspectRatio) / height);
     }
@@ -304,10 +470,10 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
         com.samsung.trailmix.util.Util.d("onText: " + text);
 
         if (TextUtils.isEmpty(text)) {
-            //subtitleView.setVisibility(View.INVISIBLE);
+            subtitleView.setVisibility(View.INVISIBLE);
         } else {
-            ///subtitleView.setVisibility(View.VISIBLE);
-            //subtitleView.setText(text);
+            subtitleView.setVisibility(View.VISIBLE);
+            subtitleView.setText(text);
         }
     }
 
@@ -355,4 +521,21 @@ public class VideoActivity extends AppCompatActivity implements SurfaceHolder.Ca
             player.blockingClearSurface();
         }
     }
+
+
+    //==============================================================================================
+    //      Multiscreen events and functions
+    //==============================================================================================
+
+//    // This method will be called when a app state event is recieved.
+//    public void onEvent(AppStateEvent event) {
+//        com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
+//        //updateUI();
+//
+//        if (metaData != null) {
+//            mMultiscreenManager.play(metaData);
+//        }
+//    }
+
+
 }

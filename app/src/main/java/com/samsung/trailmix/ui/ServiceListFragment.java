@@ -109,8 +109,8 @@ public class ServiceListFragment extends DialogFragment {
                     if (activity instanceof MainActivity) {
 
                         //Display connecting message if it is in connection screen.
-                        MainActivity ma = (MainActivity) getActivity();
-                        ma.displayConnectingMessage(service.getName());
+                        BaseActivity ba = (BaseActivity) getActivity();
+                        ba.displayConnectingMessage(service.getName());
                     }
 
                     MultiscreenManager.getInstance().connectToService(service);

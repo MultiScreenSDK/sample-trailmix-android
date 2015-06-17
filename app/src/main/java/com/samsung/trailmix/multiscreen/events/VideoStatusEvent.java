@@ -24,24 +24,15 @@
 
 package com.samsung.trailmix.multiscreen.events;
 
-import com.samsung.trailmix.multiscreen.MultiscreenManager;
+import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 
 /**
- * The track playback state event such as playing or paused.
+ * The track status event send when track status is updated such as track position.
  */
-public class TrackPlaybackEvent {
-    //The track id.
-    public String id;
+public class VideoStatusEvent {
+    public CurrentStatus status;
 
-    //The event of the track.
-    public String event;
-
-    public TrackPlaybackEvent(String id, String event) {
-        this.id = id;
-        this.event = event;
-    }
-
-    public boolean isStart() {
-        return (event != null && event.equals(MultiscreenManager.EVENT_VIDEO_START));
+    public VideoStatusEvent(CurrentStatus status) {
+        this.status = status;
     }
 }

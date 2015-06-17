@@ -20,6 +20,7 @@
 
     <color name="connect_to_header_color">@color/white</color>
     <color name="service_list_item">#424242</color>
+    <color name="video_toolbar_background">#80000000</color>
 
     <!-- Some default colors -->
     <color name="white">#FFFFFF</color>

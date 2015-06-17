@@ -47,6 +47,15 @@ public class CurrentStatus extends Base {
     //The current playback state either STATE_PLAYING or STATE_PAUSED
     private String state;
 
+    //The duration of the video.
+    private long duration;
+
+    //The video title.
+    private String title;
+
+    //The volume value.
+    private int volume;
+
 
     /**
      * Check if the track is playing.

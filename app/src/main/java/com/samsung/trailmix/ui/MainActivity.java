@@ -2,98 +2,80 @@
 
 package com.samsung.trailmix.ui;
 
-import android.app.DialogFragment;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.samsung.trailmix.R;
 import com.samsung.trailmix.adapter.LibraryAdapter;
-import com.samsung.trailmix.interceptor.AppCompatActivityMenuKeyInterceptor;
-import com.samsung.trailmix.multiscreen.MultiscreenManager;
 import com.samsung.trailmix.multiscreen.events.AppStateEvent;
-import com.samsung.trailmix.multiscreen.events.ConnectionChangedEvent;
-import com.samsung.trailmix.multiscreen.events.ServiceChangedEvent;
+import com.samsung.trailmix.multiscreen.events.PlaybackEvent;
+import com.samsung.trailmix.multiscreen.events.VideoStatusEvent;
+import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.util.Util;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import de.greenrobot.event.EventBus;
 
 
 /**
  * Initial activity for the application.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
-    private Toolbar toolbar;
 
-    //Handler
-    Handler handler = new Handler();
-
-    //The connect icon.
-    MenuItem miConnect;
-
-    /**
-     * The connectivity manager instance.
-     */
-    private MultiscreenManager mMultiscreenManager;
-
-    //The adapter to display tracks from library.
+    // The adapter to display tracks from library.
     LibraryAdapter libraryAdapter;
 
-    //The list view to display playlist.
+    // The list view to display playlist.
     ListView libraryListView;
 
-    //The playback control panel.
+    // The playback control panel.
     LinearLayout playControlLayout;
+
+    // The video information in playback control panel.
+    TextView playText;
+
+    //The play/pause control in playback control panel.
+    ImageView playControl;
+
+    //The seek bar in playback control.
+    SeekBar seekBar;
 
     // Create a fixed thread pool containing one thread
     ExecutorService loadLibExecutor = Executors.newFixedThreadPool(1);
+
+    // Current playing metadata
+    MetaData metaData;
+
+    // Current playing state
+    CurrentStatus currentStatus;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
-        //Initialize the interceptor
-        AppCompatActivityMenuKeyInterceptor.intercept(this);
+        // Setup UIs.
+        setupToolbar();
+        setupPlaybackPanel();
 
-        //Add toolbar
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
-        //Playback control panel.
-        playControlLayout = (LinearLayout)findViewById(R.id.playControlLayout);
-        playControlLayout.setVisibility(View.GONE);
-
-        //Register to receive events.
-        EventBus.getDefault().register(this);
-
-        //Get connectivity manager.
-        mMultiscreenManager = MultiscreenManager.getInstance();
-
-        //If the discovery is still running,restart it.
+        // If the discovery is still running,restart it.
         if (mMultiscreenManager.isStoppingDiscovery() || mMultiscreenManager.isDiscovering()) {
             //start discovery after some delay.
             mMultiscreenManager.restartDiscovery();
         }
 
-        //Create library adapter.
+        // Create library adapter.
         libraryAdapter = new LibraryAdapter(this, R.layout.library_list_item);
         libraryListView = (ListView) findViewById(R.id.libraryListView);
         libraryListView.setAdapter(libraryAdapter);
@@ -103,25 +85,28 @@ public class MainActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Util.d("libraryListView onItemClick at position: " + position);
 
-                MetaData md = libraryAdapter.getItem(position);
-                Intent intent = new Intent(MainActivity.this, VideoActivity.class);
-                intent.putExtra("json", md.toJsonString());
-                startActivity(intent);
+                // Get the clicked meta data
+                metaData = libraryAdapter.getItem(position);
+
+                if (mMultiscreenManager.isTVConnected()) {
+                    // Play on the TV directly.
+                    play();
+
+                    // Update the UI.
+                    updatePlaybackPanel();
+                } else {
+                    openLocalVideoPlayer();
+                }
             }
         });
 
-        //Load library in background.
+        // Load library in background.
         loadLibExecutor.submit(loadLibrary);
     }
 
     protected void onDestroy() {
-        super.onDestroy();
-
         //Stop any working thread.
         loadLibExecutor.shutdownNow();
-
-        //Remove event monitor.
-        EventBus.getDefault().unregister(this);
 
         //Stop discovery if it is running.
         if (mMultiscreenManager.isDiscovering()) {
@@ -134,13 +119,15 @@ public class MainActivity extends AppCompatActivity {
         //Release multiscreen manager
         mMultiscreenManager.release();
         mMultiscreenManager = null;
+
+        super.onDestroy();
     }
 
     public void onResume() {
         super.onResume();
 
         //Update the UI.
-        updateUI();
+        updatePlaybackPanel();
     }
 
     public void onStop() {
@@ -165,159 +152,127 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //If it is already discovering. Fetch the result directly.
-        updateUI();
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_MENU) {
-            return true;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d(this.getClass().getName(), "onCreateOptionsMenu");
-        getMenuInflater().inflate(R.menu.menu, menu);
-
-        //Get the connect menu item.
-        miConnect = menu.findItem(R.id.action_connect);
-        //hide the icon by default.
-        miConnect.setVisible(false);
-
-        return super.onCreateOptionsMenu(menu);
+        updatePlaybackPanel();
     }
 
 
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        Log.d(this.getClass().getName(), "onOptionsItemSelected: " + item.toString());
-        switch (item.getItemId()) {
-            case R.id.action_connect:
-                //When the S icon is clicked, opens the service list dialog.
-                showServiceListDialog();
-
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-
-    /**
-     * Show service list dialog.
-     */
-    private void showServiceListDialog() {
-
-        // DialogFragment.show() will take care of adding the fragment
-        // in a transaction.  We also want to remove any currently showing
-        // dialog, so make our own transaction and take care of that here.
-        FragmentTransaction ft = getFragmentManager().beginTransaction();
-        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
-        if (prev != null) {
-            ft.remove(prev);
-        }
-        ft.addToBackStack(null);
-
-        // Create and show the dialog, only shows the connect to panel.
-        DialogFragment newFragment = ServiceListFragment.newInstance(0);
-        newFragment.show(ft, "dialog");
-    }
-
-    // This method will be called when a MessageEvent is posted
-    public void onEvent(ConnectionChangedEvent event) {
-        if (mMultiscreenManager.isTVConnected()) {
-
-            //Cancel the toast before launch playlist
-            //cancelToast();
-
-            //When TV is connected, go to playlist screen.
-            // startActivity(new Intent(this, PlaylistActivity.class));
-
-
-            //When service is connected, we stop discovery.
-            mMultiscreenManager.stopDiscovery();
-
-            //Send app state request when TV is connected.
-            mMultiscreenManager.requestAppState();
-        } else if (event.errorMessage != null) {
-            //Error happens.
-            Util.e(event.errorMessage);
-
-            //When error happens, restart the discovery
-            if (!mMultiscreenManager.isDiscovering()) {
-                mMultiscreenManager.startDiscovery();
-            }
-
-            //Show the error message to user.
-            //displayErrorMessage(event.errorMessage);
-        }
-
-        updateUI();
-    }
-
-    // This method will be called when a service is changed.
-    public void onEvent(ServiceChangedEvent event) {
-        updateUI();
-    }
-
-
-    // This method will be called when a app state event is recieved.
+    // This method will be called when a app state event is received.
     public void onEvent(AppStateEvent event) {
         Util.d("MainActivity  AppStateEvent: " + event.status);
-        //updateUI();
+        //updatePlaybackPanel();
+
+        if (metaData != null) {
+            mMultiscreenManager.play(metaData);
+        }
     }
 
-    public void displayConnectingMessage(String tvName) {
-        //final String message = String.format(getString(R.string.connect_to_message), Util.getFriendlyTvName(tvName));
-        final String message = Util.getFriendlyTvName(tvName) + "\u2026";
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-//                View toastLayout = getLayoutInflater().inflate(R.layout.toast, (ViewGroup) findViewById(R.id.toastLayout));
-//                TextView serviceText = (TextView) toastLayout.findViewById(R.id.serviceText);
-//                serviceText.setText(message);
+    // This method will be called when a app state event is received.
+    public void onEvent(VideoStatusEvent event) {
+        Util.d("MainActivity  VideoStatusEvent: " + event.status);
+        //updatePlaybackPanel();
+
+        currentStatus = event.status;
+        updatePlaybackPanel();
+    }
+
+    // This method will be called when a app state event is received.
+    public void onEvent(PlaybackEvent event) {
+        Util.d("MainActivity  PlaybackEvent: " + event.toString());
+        //updatePlaybackPanel();
+
+        //Video is finished, hide the playback panel.
+        if (!event.isStart()){
+            currentStatus = null;
+            updatePlaybackPanel();
+        }
+    }
+
 //
-//                //Dismiss the dialog if it is showing.
-//                if (alertDialog != null && alertDialog.isShowing()) {
-//                    cancelToast();
-//                }
+//    // This method will be called when a MessageEvent is posted
+//    public void onEvent(ConnectionChangedEvent event) {
+//        Util.d("MainActivity ConnectionChangedEvent: " + event.toString());
 //
-//                //Display alert dialog with customized layout.
-//                alertDialog = new AlertDialog.Builder(ConnectActivity.this, R.style.CustomTheme_Dialog).create();
-//                alertDialog.setView(toastLayout);
-//                alertDialog.setCanceledOnTouchOutside(false);
-//                alertDialog.show();
-            }
-        });
+//        // We only handle disconnect event.
+//        if (!mMultiscreenManager.isTVConnected() && event.errorMessage == null) {
+//            Util.d("TV is disconnected.");
+//
+//            //Continue to play the video with local player.
+//            openLocalVideoPlayer();
+//
+//            // Hide the playback control panel.
+//            currentStatus = null;
+//            updatePlaybackPanel();
+//        }
+//    }
+
+    protected void handleDisconnect() {
+        super.handleDisconnect();
+
+        Util.d("TV is disconnected.");
+
+        //Continue to play the video with local player.
+        openLocalVideoPlayer();
+
+        // Hide the playback control panel.
+        currentStatus = null;
+        updatePlaybackPanel();
+    }
+
+
+    //Set up the playback panel.
+    private void setupPlaybackPanel() {
+        // Playback control panel.
+        playControlLayout = (LinearLayout) findViewById(R.id.playControlLayout);
+        playControlLayout.setVisibility(View.GONE);
+
+        playText = (TextView)findViewById(R.id.playText);
+        playControl = (ImageView)findViewById(R.id.playControl);
+        seekBar = (SeekBar)findViewById(R.id.seekBar);
+    }
+
+    private void openLocalVideoPlayer() {
+
+        // Launch local video player.
+        if (currentStatus == null) {
+            currentStatus = new CurrentStatus();
+            currentStatus.setId(metaData.getId());
+            currentStatus.setState(CurrentStatus.STATE_PLAYING);
+            currentStatus.setTime(0);
+        }
+
+        Intent intent = new Intent(MainActivity.this, VideoActivity.class);
+        intent.putExtra("meta", metaData.toJsonString());
+        intent.putExtra("status", currentStatus.toJsonString());
+        startActivity(intent);
+
+//                Intent mpdIntent = new Intent(MainActivity.this, PlayerActivity.class)
+//                        .setData(Uri.parse("http://redirector.c.youtube.com/videoplayback?id=604ed5ce52eda7ee&itag=22&source=youtube&"
+//                                + "sparams=ip,ipbits,expire,source,id&ip=0.0.0.0&ipbits=0&expire=19000000000&signature="
+//                                + "513F28C7FDCBEC60A66C86C9A393556C99DC47FB.04C88036EEE12565A1ED864A875A58F15D8B5300"
+//                                + "&key=ik0"))
+//                        .putExtra(PlayerActivity.CONTENT_ID_EXTRA, md.getTitle())
+//                        .putExtra(PlayerActivity.CONTENT_TYPE_EXTRA, DemoUtil.TYPE_MP4);
+//                startActivity(mpdIntent);
     }
 
     /**
-     * Update the UI according to the service count and network condition.
+     * Update the playback panel according to the service count and network condition.
      */
-    private void updateUI() {
+    private void updatePlaybackPanel() {
         //Do nothing if connectivity manager is null.
-        if (mMultiscreenManager == null || miConnect == null) {
+        if (mMultiscreenManager == null) {
             return;
         }
 
         //Check if the WIFI is connected.
-        if (Util.isWiFiConnected()) {
-            int count = mMultiscreenManager.getServiceList().size();
+        boolean isPlayingOnTV = Util.isWiFiConnected() && currentStatus != null;
 
-            miConnect.setVisible(count > 0);
+        playControlLayout.setVisibility(isPlayingOnTV?View.VISIBLE:View.GONE);
+        if (isPlayingOnTV) {
+            playText.setText(metaData.getTitle());
+            playControl.setImageResource(currentStatus.isPlaying()?R.drawable.ic_pause_dark:R.drawable.ic_play_dark);
 
-            if (mMultiscreenManager.isTVConnected()) {
-                //show the connected icon.
-                miConnect.setIcon(R.drawable.ic_discovered_gray);
-            } else {
-                //show discovered icon.
-                miConnect.setIcon(R.drawable.ic_discovered_white);
-            }
-        } else {
-            //hide the s icon.
-            miConnect.setVisible(false);
+            seekBar.setProgress((int)(currentStatus.getTime()*100/currentStatus.getDuration()));
         }
     }
 
@@ -330,7 +285,16 @@ public class MainActivity extends AppCompatActivity {
         public void run() {
             MetaData[] mds = null;
             try {
+
+                // Download video lib.
                 mds = Util.readJsonFromUrl(getString(R.string.playlist_url), MetaData[].class);
+
+                // Assign ID for each video.
+                for (MetaData md : mds) {
+                    md.setId(UUID.randomUUID().toString());
+                }
+
+                // Add videos to UI.
                 addMetaDataIntoLibrary(mds);
             } catch (Exception e) {
                 Util.e("Error when loading library:" + e.toString());
@@ -350,9 +314,14 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     libraryAdapter.clear();
                     libraryAdapter.addAll(mds);
-                    libraryAdapter.notifyDataSetChanged();
                 }
             });
+        }
+    }
+
+    private void play() {
+        if (metaData != null) {
+            mMultiscreenManager.play(metaData);
         }
     }
 
