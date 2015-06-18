@@ -67,7 +67,7 @@ public class MainActivity extends BaseActivity {
         // Setup UIs.
         setupToolbar();
         setupPlaybackPanel();
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         // If the discovery is still running,restart it.
         if (mMultiscreenManager.isStoppingDiscovery() || mMultiscreenManager.isDiscovering()) {
@@ -270,10 +270,12 @@ public class MainActivity extends BaseActivity {
         playControlLayout.setVisibility(isPlayingOnTV?View.VISIBLE:View.GONE);
         if (isPlayingOnTV) {
             playText.setText(metaData.getTitle());
-            playControl.setImageResource(currentStatus.isPlaying()?R.drawable.ic_pause_dark:R.drawable.ic_play_dark);
+            playControl.setImageResource(currentStatus.isPlaying() ? R.drawable.ic_pause_dark : R.drawable.ic_play_dark);
 
             seekBar.setProgress((int)(currentStatus.getTime()*100/currentStatus.getDuration()));
         }
+
+        toolbar.setBackgroundColor(isPlayingOnTV?getResources().getColor(R.color.black):getResources().getColor(R.color.toolbar_background_color));
     }
 
 
@@ -321,6 +323,7 @@ public class MainActivity extends BaseActivity {
 
     private void play() {
         if (metaData != null) {
+            seekBar.setProgress(0);
             mMultiscreenManager.play(metaData);
         }
     }

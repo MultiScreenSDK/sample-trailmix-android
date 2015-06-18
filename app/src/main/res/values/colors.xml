@@ -12,7 +12,8 @@
     <color name="default_now_playing">@color/black</color>
     <color name="default_list_item">#EEEEEE</color>
 
-    <color name="toolbar_background_color">#FFE91E63</color>
+    <!--<color name="toolbar_background_color">#FFE91E63</color>-->
+    <color name="toolbar_background_color">#80E91E63</color>
     <color name="toolbar_color">#EEEEEE</color>
 
     <color name="trailer_text_background_start">#00000000</color>
