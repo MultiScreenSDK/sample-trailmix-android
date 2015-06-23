@@ -43,12 +43,19 @@ dependencies {
     provided "org.projectlombok:lombok:1.12.6"
 }
 
+
+ext {
+    appName = parent.name
+    apkOutputDir = "${buildDir}/outputs/apk"
+    distDir = '../dist'
+}
+
 android {
     compileSdkVersion 21
     buildToolsVersion '22.0.1'
 
     defaultConfig {
-        minSdkVersion 15
+        minSdkVersion 17
         targetSdkVersion 21
         versionCode 102
         versionName '1.0'
@@ -88,4 +95,33 @@ android {
             // testInstrumentationRunner 'android.test.InstrumentationTestRunner' // this is the default
         }
     }
+    productFlavors {
+    }
+    applicationVariants.all { variant ->
+        //Check if an applicationName property is supplied; if not use the name of the parent project.
+        if (project.hasProperty("applicationName")) {
+            appName = applicationName
+        } else {
+            appName = parent.name
+        }
+
+        def apkName
+        variant.outputs.each { output ->
+            //If there's no ZipAlign task it means that our artifact will be unaligned and we need to mark it as such.
+            if (output.zipAlign) {
+                apkName = "${appName}-${output.baseName}-${variant.versionName}.apk"
+            } else {
+                apkName = "${appName}-${output.baseName}-${variant.versionName}-unaligned.apk"
+            }
+            output.outputFile = new File(output.outputFile.parent, apkName)
+        }
+    }
 }
+task dist(type: Copy) {
+    from(apkOutputDir) {
+        include "${appName}*.apk"
+    }
+    into distDir
+}
+
+dist.dependsOn assembleDebug

@@ -4,7 +4,7 @@
     android:layout_width="@dimen/connect_width"
     android:layout_height="wrap_content"
     android:layout_gravity="center"
-    android:padding="0dp" >
+    android:padding="0dp">
 
     <LinearLayout
         android:id="@+id/connectToLayout"
@@ -13,7 +13,7 @@
         android:layout_centerInParent="true"
         android:background="@color/white"
         android:orientation="vertical"
-        android:visibility="visible" >
+        android:visibility="visible">
 
         <LinearLayout
             android:id="@+id/connectToHeader"
@@ -59,7 +59,7 @@
             android:divider="@null"
             android:dividerHeight="0dp"
             android:drawSelectorOnTop="true"
-            tools:listitem="@layout/service_list_item"/>
+            tools:listitem="@layout/service_list_item" />
     </LinearLayout>
 
     <LinearLayout
@@ -69,27 +69,39 @@
         android:layout_centerInParent="true"
         android:background="@color/white"
         android:orientation="vertical"
-        android:paddingTop="8dp"
-        android:visibility="gone" >
+        android:visibility="gone">
 
-        <ImageView
-            android:id="@+id/selectedServiceIcon"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:scaleType="fitCenter"
-            android:src="@drawable/ic_tv_gray" />
+            android:layout_height="@dimen/service_list_item_height"
+            android:background="@color/accent_color"
+            android:orientation="horizontal"
+            android:paddingBottom="6dp"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp"
+            android:paddingTop="6dp"
+            android:gravity="center">
 
-        <TextView
-            android:id="@+id/selectedServiceText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingBottom="20dp"
-            android:paddingTop="8dp"
-            android:text="Samsung"
-            android:textColor="@color/connect_to_header_color"
-            android:textSize="18dp" />
+            <ImageView
+                android:id="@+id/selectedServiceIcon"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_tv_gray" />
+
+            <TextView
+                android:id="@+id/selectedServiceText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:text="Samsung"
+                android:textColor="@color/connect_to_header_color"
+                android:textSize="18sp" />
+
+        </LinearLayout>
 
         <View
             android:layout_width="match_parent"
@@ -99,20 +111,33 @@
         <com.andexert.library.RippleView
             android:id="@+id/buttonRipple"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/service_disconnect_height"
             android:layout_gravity="center"
             android:padding="0dp"
             app:rv_color="@color/gray">
 
-            <Button
+            <!--<Button-->
+                <!--android:id="@+id/disconnectButton1"-->
+                <!--style="@style/DefaultButtonStyle"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="wrap_content"-->
+                <!--android:paddingBottom="16dp"-->
+                <!--android:paddingTop="16dp"-->
+                <!--android:stateListAnimator="@anim/button_elevation"-->
+                <!--android:text="Disconnect"-->
+                <!--android:textColor="@color/service_list_item"-->
+                <!--android:textSize="16sp"/>-->
+            <TextView
                 android:id="@+id/disconnectButton"
-                style="@style/DefaultButtonStyle"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="16dp"
-                android:paddingTop="16dp"
+                android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
+                android:gravity="center"
+                android:clickable="true"
                 android:stateListAnimator="@anim/button_elevation"
-                android:text="Disconnect" />
+                android:text="Disconnect"
+                android:textColor="@color/service_list_item"
+                android:textSize="16sp"/>
         </com.andexert.library.RippleView>
 
     </LinearLayout>

@@ -39,6 +39,9 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
     private static LayoutInflater inflater = null;
     private Context context;
 
+    //now playing id
+    private String nowPlayingId;
+
     public LibraryAdapter(Context context, int resourceId) {
         super(context, resourceId);
         this.context = context;
@@ -71,6 +74,11 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
         }
     }
 
+    public void setNowPlaying(String id) {
+        nowPlayingId = id;
+        notifyDataSetChanged();
+    }
+
 
     static class ViewHolder {
         public TextView trailerText;
@@ -101,6 +109,16 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
 
         final MetaData md = getItem(position);
         holder.trailerText.setText(md.getTitle());
+
+        if (nowPlayingId == null) {
+            holder.nowPlayingIndicator.setVisibility(View.GONE);
+        } else {
+            if (nowPlayingId.equals(md.getId())) {
+                holder.nowPlayingIndicator.setVisibility(View.VISIBLE);
+            } else {
+                holder.nowPlayingIndicator.setVisibility(View.GONE);
+            }
+        }
 
 //        String albumArtThumbnail = track.getAlbumArtThumbnail();
 //

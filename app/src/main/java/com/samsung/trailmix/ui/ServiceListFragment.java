@@ -34,7 +34,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -144,7 +143,8 @@ public class ServiceListFragment extends DialogFragment {
                 selectedServiceText.setText(Util.getFriendlyTvName(MultiscreenManager.getInstance().getConnectedService().getName()));
 
                 //Update the disconnect button with user color.
-                Button btnDisconnect = (Button) view.findViewById(R.id.disconnectButton);
+                //Button btnDisconnect = (Button) view.findViewById(R.id.disconnectButton);
+                TextView btnDisconnect = (TextView) view.findViewById(R.id.disconnectButton);
 
                 //When disconnect button is clicked, close the activity and returns to connection screen.
                 btnDisconnect.setOnClickListener(new View.OnClickListener() {
@@ -175,17 +175,22 @@ public class ServiceListFragment extends DialogFragment {
         dialog.setCanceledOnTouchOutside(true);
         dialog.show();
 
-        // Set window width
+        // Set window width.
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.copyFrom(dialog.getWindow().getAttributes());
-        lp.gravity = Gravity.TOP;
         lp.width = getResources().getDimensionPixelSize(R.dimen.connect_width);
 
-        // Set window height
-        int displayHeight = Util.getDisplayHeight(getActivity());
-        int maxHeight = Math.round((float) displayHeight * 75 / 100);
-        lp.y = Math.round((float) (displayHeight - maxHeight) / 2);
-        lp.height = maxHeight;
+        // Disconnect dialog use center by default.
+        if (!MultiscreenManager.getInstance().isTVConnected()) {
+
+            lp.gravity = Gravity.TOP;
+
+            // Set window height
+            int displayHeight = Util.getDisplayHeight(getActivity());
+            int maxHeight = Math.round((float) displayHeight * 75 / 100);
+            lp.y = Math.round((float) (displayHeight - maxHeight) / 2);
+            //lp.height = maxHeight;
+        }
 
         dialog.getWindow().setAttributes(lp);
         return dialog;

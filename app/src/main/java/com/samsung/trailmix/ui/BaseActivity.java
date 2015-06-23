@@ -23,6 +23,7 @@ import com.samsung.trailmix.interceptor.AppCompatActivityMenuKeyInterceptor;
 import com.samsung.trailmix.multiscreen.MultiscreenManager;
 import com.samsung.trailmix.multiscreen.events.ConnectionChangedEvent;
 import com.samsung.trailmix.multiscreen.events.ServiceChangedEvent;
+import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.util.Util;
 
 import de.greenrobot.event.EventBus;
@@ -39,6 +40,9 @@ public class BaseActivity extends AppCompatActivity {
     //The connect icon.
     protected MenuItem miConnect;
 
+    //The text in the toolbar.
+    protected TextView appText;
+
 
     /**
      * The connectivity manager instance.
@@ -47,6 +51,9 @@ public class BaseActivity extends AppCompatActivity {
 
     //Show connecting message
     AlertDialog alertDialog;
+
+    //The metadata to be played.
+    protected MetaData metaData;
 
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,9 +148,9 @@ public class BaseActivity extends AppCompatActivity {
             mMultiscreenManager.requestAppState();
 
             //If it is video screen, exit to main screen.
-            if (this instanceof VideoActivity) {
-                finish();
-            }
+//            if (this instanceof VideoActivity) {
+//                finish();
+//            }
         } else if (event.errorMessage != null) {
             //Error happens.
             Util.e(event.errorMessage);
@@ -155,16 +162,11 @@ public class BaseActivity extends AppCompatActivity {
 
             //Show the error message to user.
             displayErrorMessage(event.errorMessage);
-        } else {
-            // normal disconnect.
-            handleDisconnect();
         }
 
         updateToolbar();
     }
 
-    protected  void handleDisconnect() {
-    }
 
     /**
      * Update the toolbar according to the service count and network condition.
@@ -183,7 +185,7 @@ public class BaseActivity extends AppCompatActivity {
 
             if (mMultiscreenManager.isTVConnected()) {
                 //show the connected icon.
-                miConnect.setIcon(R.drawable.ic_connected_white);
+                miConnect.setIcon(R.drawable.ic_connected_white_22);
             } else {
                 //show discovered icon.
                 miConnect.setIcon(R.drawable.ic_discovered_white);
@@ -194,13 +196,15 @@ public class BaseActivity extends AppCompatActivity {
         }
     }
 
-    void setupToolbar() {
+    protected void setupToolbar() {
         //Initialize the interceptor
         AppCompatActivityMenuKeyInterceptor.intercept(this);
 
         //Add toolbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        appText = (TextView)toolbar.findViewById(R.id.appText);
     }
 
     /**
@@ -221,6 +225,34 @@ public class BaseActivity extends AppCompatActivity {
         // Create and show the dialog, only shows the connect to panel.
         DialogFragment newFragment = ServiceListFragment.newInstance(0);
         newFragment.show(ft, "dialog");
+    }
+
+    /**
+     * Show join/overwrite dialog.
+     *
+     * @param name  the TV name.
+     * @param title the movie name.
+     */
+    protected void showJoinOverwritetDialog(String name, String title, String metatdata) {
+
+        // DialogFragment.show() will take care of adding the fragment
+        // in a transaction.  We also want to remove any currently showing
+        // dialog, so make our own transaction and take care of that here.
+        FragmentTransaction ft = getFragmentManager().beginTransaction();
+        Fragment prev = getFragmentManager().findFragmentByTag("dialog");
+        if (prev != null) {
+            ft.remove(prev);
+        }
+        ft.addToBackStack(null);
+
+        // Create and show the dialog, only shows the connect to panel.
+        DialogFragment newFragment = JoinOverwriteFragment.newInstance(name, title, metatdata);
+        newFragment.show(ft, "dialog");
+    }
+
+    public void overwritePlaying(String metatdata) {
+        metaData = MetaData.parse(metatdata,MetaData.class);
+        mMultiscreenManager.play(metaData);
     }
 
     public void displayConnectingMessage(String tvName) {

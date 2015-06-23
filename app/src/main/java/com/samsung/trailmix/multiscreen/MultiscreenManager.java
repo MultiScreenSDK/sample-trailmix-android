@@ -46,9 +46,6 @@ import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.util.Util;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -642,12 +639,7 @@ public class MultiscreenManager {
      * seek the current playing video.
      */
     public void seek(float position) {
-        JSONObject jobj = new JSONObject();
-        try {
-            jobj.put("data", position);
-            sendToTV(CMD_SEEK, jobj, Message.TARGET_HOST);
-        } catch (JSONException e) {
-        }
+        sendToTV(CMD_SEEK, position, Message.TARGET_HOST);
     }
 
 
@@ -660,8 +652,15 @@ public class MultiscreenManager {
             Util.d("onAppStateListener = " + message.toString());
 
             if (message != null && message.getData() != null) {
-                String jsonString = JSONUtil.toJSONString((HashMap)message.getData());
-                EventBus.getDefault().post(new AppStateEvent(CurrentStatus.parse(jsonString, CurrentStatus.class)));
+                HashMap map = (HashMap)message.getData();
+                if (map.containsKey("currentStatus")) {
+
+                    // Read the json string from message map.
+                    String jsonString = JSONUtil.toJSONString((HashMap)map.get("currentStatus"));
+
+                    // Broadcast app state event.
+                    EventBus.getDefault().post(new AppStateEvent(CurrentStatus.parse(jsonString, CurrentStatus.class)));
+                }
             }
         }
     };

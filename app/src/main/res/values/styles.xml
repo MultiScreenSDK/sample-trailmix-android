@@ -14,7 +14,8 @@
     <style name="CustomTheme.Dialog" parent="Theme.AppCompat.Dialog">
         <item name="android:buttonBarButtonStyle">@style/DefaultButtonStyle</item>
         <!-- See caveat -->
-        <item name="android:windowBackground">@android:color/transparent</item>
+        <!--<item name="android:windowBackground">@android:color/transparent</item>-->
+        <item name="android:windowBackground">@drawable/abc_popup_background_mtrl_mult</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowIsFloating">true</item>
         <item name="android:windowIsTranslucent">true</item>

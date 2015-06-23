@@ -34,5 +34,7 @@
     <string name="drm_error_unsupported_scheme">This device does not support the required DRM scheme</string>
 
     <string name="drm_error_unknown">An unknown DRM error occurred</string>
-
+    <string name="cancel">Cancel</string>
+    <string name="join">Join</string>
+    <string name="overwrite">Overwrite</string>
 </resources>

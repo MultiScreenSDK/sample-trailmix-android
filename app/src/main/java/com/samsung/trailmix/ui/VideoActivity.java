@@ -13,6 +13,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowManager;
@@ -43,12 +45,15 @@ import com.google.android.exoplayer.text.CaptionStyleCompat;
 import com.google.android.exoplayer.text.SubtitleView;
 import com.google.android.exoplayer.util.Util;
 import com.samsung.trailmix.R;
+import com.samsung.trailmix.multiscreen.events.AppStateEvent;
 import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.player.DemoUtil;
 import com.samsung.trailmix.player.EventLogger;
+import com.samsung.trailmix.player.SimpleMediaController;
 import com.samsung.trailmix.player.SmoothStreamingTestMediaDrmCallback;
 import com.samsung.trailmix.player.WidevineTestMediaDrmCallback;
+import com.samsung.trailmix.ui.view.PlayControlImageView;
 
 import java.util.Map;
 
@@ -69,7 +74,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
     private View debugRootView;
     private View shutterView;
-    private TextView playerStateTextView;
+    //    private TextView playerStateTextView;
     private SubtitleView subtitleView;
 
 
@@ -80,11 +85,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     private DemoPlayer player;
     private boolean playerNeedsPrepare;
 
-    private long playerPosition;
     private boolean enableBackgroundAudio;
-
-    //The metadata to be played.
-    private MetaData metaData;
 
     //The current playing state.
     private CurrentStatus currentStatus;
@@ -96,27 +97,22 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     //the video to display video.
     private VideoSurfaceView surfaceView;
 
-
-
-    //The app name or video name in the toolbar.
-    private TextView appText;
+    private PlayControlImageView playControlImageView;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.video_activity);
 
-        //Set up toobar.
+        // Set up toolbar.
         setupToolbar();
 
-        //Custom toolbar color
+        // Custom toolbar color
         toolbar.setBackgroundColor(getResources().getColor(R.color.video_toolbar_background));
-        TextView textView = (TextView)toolbar.findViewById(R.id.appText);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        textView.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        appText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        appText.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
 
-        appText = (TextView)findViewById(R.id.appText);
-
+        // Add back button in toolbar.
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         //Read the video information
@@ -127,6 +123,27 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
 
         View root = findViewById(R.id.root);
+        root.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    togglePanels();
+                } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+                    view.performClick();
+                }
+                return true;
+            }
+        });
+        root.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+                    return mediaController.dispatchKeyEvent(event);
+                }
+                return false;
+            }
+        });
+
         audioCapabilitiesReceiver = new AudioCapabilitiesReceiver(getApplicationContext(), this);
 
         shutterView = findViewById(R.id.shutter);
@@ -134,13 +151,17 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
         surfaceView = (VideoSurfaceView) findViewById(R.id.surface_view);
         surfaceView.getHolder().addCallback(this);
-        debugTextView = (TextView) findViewById(R.id.debug_text_view);
+//        debugTextView = (TextView) findViewById(R.id.debug_text_view);
 
-        playerStateTextView = (TextView) findViewById(R.id.player_state_view);
+//        playerStateTextView = (TextView) findViewById(R.id.player_state_view);
         subtitleView = (SubtitleView) findViewById(R.id.subtitles);
 
-        mediaController = new MediaController(this);
+        //mediaController = new MediaController(this);
+        mediaController = new SimpleMediaController(this);
         mediaController.setAnchorView(root);
+
+        playControlImageView = (PlayControlImageView)findViewById(R.id.playControl);
+        playControlImageView.setOnClickListener(this);
 
         DemoUtil.setDefaultCookieManager();
 
@@ -186,15 +207,33 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
     @Override
     public void onClick(View view) {
-        //if (view == retryButton) {
-//            preparePlayer();
-        //}
+        com.samsung.trailmix.util.Util.d("onClick");
+        if (view == playControlImageView) {
+            PlayControlImageView.State state = playControlImageView.getState();
+            if (state==PlayControlImageView.State.retry) {
+
+                // Replay from beginning.
+                currentStatus.setTime(0);
+                releasePlayer();
+                preparePlayer();
+            } else if (state == PlayControlImageView.State.pause) {
+                player.getPlayerControl().start();
+                playControlImageView.setState(PlayControlImageView.State.play);
+            } else {
+                player.getPlayerControl().pause();
+                playControlImageView.setState(PlayControlImageView.State.pause);
+            }
+
+            resetAutoHideTimer();
+        }
     }
 
     // AudioCapabilitiesReceiver.Listener methods
 
     @Override
     public void onAudioCapabilitiesChanged(AudioCapabilities audioCapabilities) {
+        com.samsung.trailmix.util.Util.d("onAudioCapabilitiesChanged=" + audioCapabilities.toString());
+
         boolean audioCapabilitiesChanged = !audioCapabilities.equals(this.audioCapabilities);
         if (player == null || audioCapabilitiesChanged) {
             this.audioCapabilities = audioCapabilities;
@@ -206,10 +245,37 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     }
 
 
+    // This method will be called when a app state event is received.
+    public void onEvent(AppStateEvent event) {
+        com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
+
+        currentStatus = event.status;
+        String currentPlayingId = currentStatus.getId();
+
+        if (currentPlayingId != null) {
+
+            // Display join/overwrite dialog.
+            String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
+            showJoinOverwritetDialog(name, currentStatus.getTitle(), metaData.toJsonString());
+        } else {
+
+            // Nothing is played, play current video.
+           mMultiscreenManager.play(metaData);
+
+            // Exit the local player.
+            finish();
+        }
+    }
+
 
 
     // Internal methods
 
+
+
+    /**
+     * Read the playback information from intent.
+     */
     private void readPlaybackInfo() {
         Intent intent = getIntent();
         if (intent != null) {
@@ -223,7 +289,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                     //metaData.setType(DemoUtil.TYPE_MP4);
 
                     //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
-                }catch (Exception e){}
+                } catch (Exception e) {
+                }
             }
 
             String status = intent.getStringExtra("status");
@@ -236,7 +303,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                     //metaData.setType(DemoUtil.TYPE_MP4);
 
                     //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
-                }catch (Exception e){}
+                } catch (Exception e) {
+                }
             }
         }
     }
@@ -322,7 +390,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             player.addListener(this);
             player.setTextListener(this);
             player.setMetadataListener(this);
-            player.seekTo(playerPosition);
+
+            com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + currentStatus.getTime());
+            player.seekTo((long)currentStatus.getTime());
+
             playerNeedsPrepare = true;
             mediaController.setMediaPlayer(player.getPlayerControl());
             mediaController.setEnabled(true);
@@ -340,13 +411,13 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         player.setSurface(surfaceView.getHolder().getSurface());
         player.setPlayWhenReady(true);
 
-        //Play at the given position.
-        player.seekTo((long)currentStatus.getTime());
+        // update the play control button
+        playControlImageView.setState(PlayControlImageView.State.play);
     }
 
     private void releasePlayer() {
         if (player != null) {
-            playerPosition = player.getCurrentPosition();
+            currentStatus.setTime(player.getCurrentPosition());
             player.release();
             player = null;
             eventLogger.endSession();
@@ -362,10 +433,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 //    audioButton.setVisibility(haveTracks(DemoPlayer.TYPE_AUDIO) ? View.VISIBLE : View.GONE);
 //    textButton.setVisibility(haveTracks(DemoPlayer.TYPE_TEXT) ? View.VISIBLE : View.GONE);
     }
-    private void showControls() {
-        mediaController.show(0);
-        debugRootView.setVisibility(View.VISIBLE);
-    }
+
 
     private void configureSubtitleView() {
         CaptionStyleCompat captionStyle;
@@ -385,9 +453,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 .getDefaultDisplay();
         Point displaySize = new Point();
         display.getSize(displaySize);
-//    return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
-//        CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
-        return CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y);
+        return Math.max(getResources().getDimension(R.dimen.subtitle_minimum_font_size),
+                CAPTION_LINE_HEIGHT_RATIO * Math.min(displaySize.x, displaySize.y));
     }
 
     @TargetApi(19)
@@ -404,20 +471,67 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         return CaptionStyleCompat.createFromCaptionStyle(captioningManager.getUserStyle());
     }
 
+
+
+    private void togglePanels() {
+        showPanels(toolbar.getVisibility() == View.VISIBLE ? View.GONE : View.VISIBLE);
+    }
+
+    private void showPanels(int visible) {
+        if (visible == 0) {
+            mediaController.show(visible);
+        } else {
+            mediaController.hide();
+        }
+
+        toolbar.setVisibility(visible);
+        playControlImageView.setVisibility(visible);
+
+        resetAutoHideTimer();
+    }
+
+    private void resetAutoHideTimer() {
+        //Cancel the previous auto hide task.
+        handler.removeCallbacks(hidePanelThread);
+
+        //When panels are displaying, we will auto hide them after certain seconds.
+        if (toolbar.getVisibility() == View.VISIBLE) {
+            handler.postDelayed(hidePanelThread, 3000);
+        }
+
+    }
+
+    Runnable hidePanelThread = new Runnable() {
+
+        @Override
+        public void run() {
+            showPanels(View.GONE);
+        }
+    };
+
     // DemoPlayer.Listener implementation
 
     @Override
     public void onStateChanged(boolean playWhenReady, int playbackState) {
         if (playbackState == ExoPlayer.STATE_ENDED) {
-            showControls();
+            //showControls();
+
+            //show retry button
+            //
+            //
         }
         String text = "playWhenReady=" + playWhenReady + ", playbackState=";
-        switch(playbackState) {
+        switch (playbackState) {
             case ExoPlayer.STATE_BUFFERING:
                 text += "buffering";
                 break;
             case ExoPlayer.STATE_ENDED:
                 text += "ended";
+
+                // Display retry button
+                playControlImageView.setState(PlayControlImageView.State.retry);
+                showPanels(View.VISIBLE);
+
                 break;
             case ExoPlayer.STATE_IDLE:
                 text += "idle";
@@ -427,6 +541,11 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 break;
             case ExoPlayer.STATE_READY:
                 text += "ready";
+
+
+                //Show the panels when video is started.
+                showPanels(View.VISIBLE);
+
                 break;
             default:
                 text += "unknown";
@@ -435,7 +554,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
         com.samsung.trailmix.util.Util.d("onStateChanged: " + text);
 
-        playerStateTextView.setText(text);
+//        playerStateTextView.setText(text);
         updateButtonVisibilities();
     }
 
@@ -453,7 +572,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
         playerNeedsPrepare = true;
         updateButtonVisibilities();
-        showControls();
+        //showControls();
     }
 
     @Override
