@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -21,6 +20,7 @@ import com.samsung.trailmix.multiscreen.events.PlaybackEvent;
 import com.samsung.trailmix.multiscreen.events.VideoStatusEvent;
 import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
+import com.samsung.trailmix.ui.view.PlayControlImageView;
 import com.samsung.trailmix.util.Settings;
 import com.samsung.trailmix.util.Util;
 
@@ -48,7 +48,7 @@ public class MainActivity extends BaseActivity {
     TextView playText;
 
     //The play/pause control in playback control panel.
-    ImageView playControl;
+    PlayControlImageView playControl;
 
     //The seek bar in playback control.
     SeekBar seekBar;
@@ -222,10 +222,11 @@ public class MainActivity extends BaseActivity {
     public void onEvent(PlaybackEvent event) {
         Util.d("MainActivity  PlaybackEvent: " + event.toString());
 
-        // When video playback is finished, hide the playback panel.
+        // When video playback is finished, show retry button.
         if (!event.isStart()) {
-            currentStatus = null;
-            updateUI();
+//            currentStatus = null;
+//            updateUI();
+            playControl.setState(PlayControlImageView.State.retry);
         }
     }
 
@@ -240,7 +241,7 @@ public class MainActivity extends BaseActivity {
         if (event.errorMessage == null) {
 
             // Update the connected service name or app name.
-            appText.setText(mMultiscreenManager.isTVConnected()?Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()):getString(R.string.app_name));
+            appText.setText(mMultiscreenManager.isTVConnected() ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
 
             if (!mMultiscreenManager.isTVConnected()) {
                 handleDisconnect();
@@ -291,17 +292,25 @@ public class MainActivity extends BaseActivity {
         playText = (TextView) findViewById(R.id.playText);
 
         // Play/Pause button.
-        playControl = (ImageView) findViewById(R.id.playControl);
-        playControl.setSelected(true);
+        playControl = (PlayControlImageView) findViewById(R.id.playControl);
+        playControl.setState(PlayControlImageView.State.play);
         playControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 //playControl.setSelected(!playControl.isSelected());
 
-                if (!playControl.isSelected()) {
+                PlayControlImageView.State state = playControl.getState();
+                if (state == PlayControlImageView.State.retry) {
+
+                    // Replay from beginning.
                     play();
+                    playControl.setState(PlayControlImageView.State.play);
+                } else if (state == PlayControlImageView.State.pause) {
+                    play();
+                    playControl.setState(PlayControlImageView.State.play);
                 } else {
                     mMultiscreenManager.pause();
+                    playControl.setState(PlayControlImageView.State.pause);
                 }
             }
         });
@@ -362,7 +371,7 @@ public class MainActivity extends BaseActivity {
      */
     void updateUI() {
         // Do nothing if connectivity manager is null.
-        if (mMultiscreenManager == null || metaData == null) {
+        if (mMultiscreenManager == null) {
             return;
         }
 
@@ -376,13 +385,15 @@ public class MainActivity extends BaseActivity {
         if (isPlayingOnTV) {
 
             // Update video information when playing on TV.
-            playText.setText(metaData.getTitle());
-            playControl.setSelected(currentStatus.isPlaying());
-            seekBar.setMax((int)currentStatus.getDuration());
-            seekBar.setProgress((int) currentStatus.getTime());
+            if (metaData != null && currentStatus != null && currentStatus.getId()!=null) {
+                playText.setText(metaData.getTitle());
+                playControl.setSelected(currentStatus.isPlaying());
+                seekBar.setMax((int) currentStatus.getDuration());
+                seekBar.setProgress((int) currentStatus.getTime());
 
-            // Make sure the playback control panel is below toolbar.
-            params.addRule(RelativeLayout.BELOW, R.id.toolbar);
+                // Make sure the playback control panel is below toolbar.
+                params.addRule(RelativeLayout.BELOW, R.id.toolbar);
+            }
         } else {
 
             // Restore the toolbar position (floating).
@@ -396,7 +407,7 @@ public class MainActivity extends BaseActivity {
         toolbar.setBackgroundColor(isPlayingOnTV ? getResources().getColor(R.color.black) : getResources().getColor(R.color.toolbar_background_color));
 
         // Update now playing item.
-        libraryAdapter.setNowPlaying(isPlayingOnTV?currentStatus.getId():null);
+        libraryAdapter.setNowPlaying(isPlayingOnTV ? currentStatus.getId() : null);
     }
 
 

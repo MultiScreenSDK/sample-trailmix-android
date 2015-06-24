@@ -3,124 +3,32 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
-    android:focusable="true"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:keepScreenOn="true"
     android:background="@color/black"
-    tools:context=".ui.MainActivity" >
+    android:focusable="true"
+    android:keepScreenOn="true"
+    tools:context=".ui.MainActivity">
 
-<!--<RelativeLayout-->
-    <!--xmlns:android="http://schemas.android.com/apk/res/android"-->
-    <!--xmlns:app="http://schemas.android.com/apk/res-auto"-->
-    <!--xmlns:tools="http://schemas.android.com/tools"-->
-    <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="match_parent"-->
-    <!--android:layout_gravity="center_horizontal"-->
-    <!--tools:context=".ui.MainActivity" >-->
 
-    <!--<VideoView-->
-        <!--android:id="@+id/video"-->
-        <!--android:layout_width="match_parent"-->
-        <!--android:layout_height="match_parent"-->
-        <!--android:layout_alignParentBottom="true"-->
-        <!--android:layout_alignParentLeft="true"-->
-        <!--android:layout_alignParentRight="true"-->
-        <!--android:layout_alignParentTop="true"-->
-        <!--android:background="@color/green">-->
-    <!--</VideoView>-->
+    <!--android:focusable="true"-->
 
-    <com.google.android.exoplayer.VideoSurfaceView android:id="@+id/surface_view"
+
+    <com.google.android.exoplayer.VideoSurfaceView
+        android:id="@+id/surface_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center" />
 
-    <com.google.android.exoplayer.text.SubtitleView android:id="@+id/subtitles"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center_horizontal"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
-        android:layout_marginBottom="32dp"
-        android:visibility="invisible"/>
 
-    <View android:id="@+id/shutter"
+    <View
+        android:id="@+id/shutter"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/black"/>
+        android:background="@android:color/black" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#88000000"
-        android:orientation="vertical">
-
-        <!--<TextView android:id="@+id/player_state_view"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:paddingLeft="4dp"-->
-            <!--android:paddingRight="4dp"-->
-            <!--android:textSize="10sp"-->
-            <!--tools:ignore="SmallSp"/>-->
-
-        <!--<TextView android:id="@+id/debug_text_view"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:paddingLeft="4dp"-->
-            <!--android:paddingRight="4dp"-->
-            <!--android:textSize="10sp"-->
-            <!--tools:ignore="SmallSp"/>-->
-
-        <LinearLayout android:id="@+id/controls_root"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:visibility="gone">
-
-            <!--<Button android:id="@+id/video_controls"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/video"-->
-            <!--style="@style/DemoButton"-->
-            <!--android:visibility="gone"-->
-            <!--android:onClick="showVideoPopup"/>-->
-
-            <!--<Button android:id="@+id/audio_controls"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/audio"-->
-            <!--style="@style/DemoButton"-->
-            <!--android:visibility="gone"-->
-            <!--android:onClick="showAudioPopup"/>-->
-
-            <!--<Button android:id="@+id/text_controls"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/text"-->
-            <!--style="@style/DemoButton"-->
-            <!--android:visibility="gone"-->
-            <!--android:onClick="showTextPopup"/>-->
-
-            <!--<Button android:id="@+id/verbose_log_controls"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/logging"-->
-            <!--style="@style/DemoButton"-->
-            <!--android:onClick="showVerboseLogPopup"/>-->
-
-            <!--<Button android:id="@+id/retry_button"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:text="@string/retry"-->
-            <!--android:visibility="gone"-->
-            <!--style="@style/DemoButton"/>-->
-
-        </LinearLayout>
-
-    </LinearLayout>
-
-
-    <include layout="@layout/toolbar"
+    <include
+        layout="@layout/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true" />
@@ -129,9 +37,50 @@
         android:id="@+id/playControl"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:padding="@dimen/dialog_join_content_top_padding"
-        android:src="@drawable/ic_play_dark"
-        android:layout_gravity="center"/>
+        android:src="@drawable/ic_play_dark" />
 
-<!--</RelativeLayout>-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical">
+
+
+        <com.google.android.exoplayer.text.SubtitleView
+            android:id="@+id/subtitles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="32dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
+            android:visibility="invisible" />
+
+
+        <LinearLayout
+            android:id="@+id/controls_root"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/toolbar_height"
+            android:background="@color/video_toolbar_background"
+            android:gravity="center"
+            android:minHeight="@dimen/toolbar_height"
+            android:orientation="horizontal">
+
+            <SeekBar
+                android:id="@+id/videoSeekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:progress="0" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!--</RelativeLayout>-->
 </FrameLayout>

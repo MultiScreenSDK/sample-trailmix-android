@@ -42,7 +42,7 @@ public class PlayControlImageView extends ImageView {
                 setImageResource(R.drawable.ic_play_dark);
                 break;
             case retry:
-                setImageResource(R.drawable.ic_discovered_gray);
+                setImageResource(R.drawable.ic_replay_dark);
                 break;
         }
     }

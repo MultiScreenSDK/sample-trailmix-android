@@ -43,7 +43,7 @@ import java.net.URLConnection;
 
 public class Util {
     //The debug tag.
-    private static final String TAG = "SamsungTrailmix";
+    private static final String TAG = "SamsungTrailmixDebug";
 
     //The flag to output debug message or not.
     public static final boolean DEBUG = true;
