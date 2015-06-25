@@ -11,9 +11,6 @@
     tools:context=".ui.MainActivity">
 
 
-    <!--android:focusable="true"-->
-
-
     <com.google.android.exoplayer.VideoSurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
@@ -53,32 +50,54 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="32dp"
+            android:layout_marginBottom="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:visibility="invisible" />
 
 
-        <LinearLayout
+        <RelativeLayout
             android:id="@+id/controls_root"
             android:layout_width="match_parent"
             android:layout_height="@dimen/toolbar_height"
             android:background="@color/video_toolbar_background"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
             android:gravity="center"
-            android:minHeight="@dimen/toolbar_height"
-            android:orientation="horizontal">
+            android:minHeight="@dimen/toolbar_height">
 
+            <TextView
+                android:id="@+id/positionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true"
+                android:textSize="12sp"
+                android:textColor="@color/toolbar_color"
+                android:text="00:00:00"/>
             <SeekBar
                 android:id="@+id/videoSeekbar"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingLeft="16dp"
-                android:paddingRight="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_marginRight="16dp"
+                android:layout_toRightOf="@+id/positionTextView"
+                android:layout_toLeftOf="@+id/durationTextView"
+                android:layout_centerVertical="true"
                 android:clickable="true"
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:progress="0" />
-        </LinearLayout>
+            <TextView
+                android:id="@+id/durationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:textSize="12sp"
+                android:textColor="@color/toolbar_color"
+                android:text="00:00:00"/>
+        </RelativeLayout>
 
     </LinearLayout>
 

@@ -32,6 +32,8 @@ import android.widget.TextView;
 
 import com.samsung.trailmix.R;
 import com.samsung.trailmix.multiscreen.model.MetaData;
+import com.samsung.trailmix.util.Util;
+import com.squareup.picasso.Picasso;
 
 public class LibraryAdapter extends ArrayAdapter<MetaData> {
 
@@ -75,8 +77,10 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
     }
 
     public void setNowPlaying(String id) {
-        nowPlayingId = id;
-        notifyDataSetChanged();
+        if (nowPlayingId != id) {
+            nowPlayingId = id;
+            notifyDataSetChanged();
+        }
     }
 
 
@@ -110,6 +114,11 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
         final MetaData md = getItem(position);
         holder.trailerText.setText(md.getTitle());
 
+        String cover = md.getCover();
+        if (cover != null) {
+            Picasso.with(context).load(Util.getUriFromUrl(cover)).into(holder.trailerArt);
+        }
+
         if (nowPlayingId == null) {
             holder.nowPlayingIndicator.setVisibility(View.GONE);
         } else {
@@ -119,21 +128,6 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
                 holder.nowPlayingIndicator.setVisibility(View.GONE);
             }
         }
-
-//        String albumArtThumbnail = track.getAlbumArtThumbnail();
-//
-//        if (albumArtThumbnail != null) {
-//            Picasso.with(context).load(Util.getUriFromUrl(albumArtThumbnail)).fit().
-//                    error(R.drawable.album_placeholder).into(holder.albumArt);
-//        }
-//
-//        if (holder.userColor != null) {
-//            holder.userColor.setBackgroundColor(track.getColorInt());
-//        }
-//
-//        if (holder.nowPlayingIcon != null) {
-//            holder.nowPlayingIcon.setVisibility(position == 0 ? View.VISIBLE : View.INVISIBLE);
-//        }
 
         return row;
     }

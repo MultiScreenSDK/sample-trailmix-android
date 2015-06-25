@@ -40,6 +40,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.concurrent.TimeUnit;
 
 public class Util {
     //The debug tag.
@@ -196,5 +197,16 @@ public class Util {
     public static int getDisplayHeight(Context context) {
         Point point = getDisplayDimensions(context);
         return point.y;
+    }
+
+    /**
+     * Format milliseconds to hh:mm:ss format string.
+     * @param millis
+     * @return
+     */
+    public static String formatTimeString(long millis) {
+        return String.format("%02d:%02d:%02d", TimeUnit.MILLISECONDS.toHours(millis),
+                TimeUnit.MILLISECONDS.toMinutes(millis) % TimeUnit.HOURS.toMinutes(1),
+                TimeUnit.MILLISECONDS.toSeconds(millis) % TimeUnit.MINUTES.toSeconds(1));
     }
 }

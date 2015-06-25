@@ -21,7 +21,7 @@
 
     <application
         android:name=".App"
-        android:icon="@drawable/icon"
+        android:icon="@drawable/appicon_trailmix"
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
 

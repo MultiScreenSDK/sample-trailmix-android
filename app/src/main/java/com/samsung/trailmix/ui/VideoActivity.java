@@ -19,7 +19,7 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -90,7 +90,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     private DemoPlayer player;
     private boolean playerNeedsPrepare;
 
-    private boolean enableBackgroundAudio;
+    // The flag whether or not to use background audio, by default it is false.
+    private boolean enableBackgroundAudio = false;
 
     //The current playing state.
     private CurrentStatus currentStatus;
@@ -104,12 +105,17 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
     private PlayControlImageView playControlImageView;
 
-    /**
-     * The root of the control panel
-     */
-    private LinearLayout controls_root;
+    // The root of the control panel
+    private RelativeLayout controls_root;
 
+    // The seek bar for video playback control.
     private SeekBar seekBar;
+
+    // The media playback position.
+    private TextView postionTextView;
+
+    // The video duration.
+    private TextView durationTextView;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -152,7 +158,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
                     //return mediaController.dispatchKeyEvent(event);
-                    return seekBar.dispatchKeyEvent(event);
+                    return playControlImageView.dispatchKeyEvent(event);
                 }
                 return false;
             }
@@ -161,7 +167,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         audioCapabilitiesReceiver = new AudioCapabilitiesReceiver(getApplicationContext(), this);
 
         shutterView = findViewById(R.id.shutter);
-        controls_root = (LinearLayout) findViewById(R.id.controls_root);
+        controls_root = (RelativeLayout) findViewById(R.id.controls_root);
         seekBar = (SeekBar) findViewById(R.id.videoSeekbar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -179,6 +185,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 }
             }
         });
+        postionTextView = (TextView) findViewById(R.id.positionTextView);
+        durationTextView = (TextView) findViewById(R.id.durationTextView);
+
 
         surfaceView = (VideoSurfaceView) findViewById(R.id.surface_view);
         surfaceView.getHolder().addCallback(this);
@@ -224,7 +233,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
         try {
             audioCapabilitiesReceiver.unregister();
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
 
         shutterView.setVisibility(View.VISIBLE);
     }
@@ -245,6 +255,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             PlayControlImageView.State state = playControlImageView.getState();
             if (state == PlayControlImageView.State.retry) {
 
+                shutterView.setVisibility(View.GONE);
                 // Replay from beginning.
                 currentStatus.setTime(0);
                 //seekTo(0);
@@ -268,14 +279,20 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     @Override
     public void onAudioCapabilitiesChanged(AudioCapabilities audioCapabilities) {
         com.samsung.trailmix.util.Util.d("onAudioCapabilitiesChanged=" + audioCapabilities.toString());
+        com.samsung.trailmix.util.Util.d("current audioCapabilities=" + this.audioCapabilities);
 
         boolean audioCapabilitiesChanged = !audioCapabilities.equals(this.audioCapabilities);
+        com.samsung.trailmix.util.Util.d("audioCapabilitiesChanged=" + audioCapabilitiesChanged);
+        com.samsung.trailmix.util.Util.d("player=" + player);
+
         if (player == null || audioCapabilitiesChanged) {
             this.audioCapabilities = audioCapabilities;
 
             releasePlayer();
             preparePlayer();
         } else if (player != null) {
+
+            com.samsung.trailmix.util.Util.d("Move the player to foreground.");
             player.setBackgrounded(false);
         }
     }
@@ -313,7 +330,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             if (player != null) {
 
                 long position = player.getCurrentPosition();
-                seekBar.setProgress((int)position);
+                seekBar.setProgress((int) position);
+                postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
 
                 //Update the media position every second.
                 handler.postDelayed(updateMediaPosition, 1000);
@@ -330,13 +348,13 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             String jstr = intent.getStringExtra("meta");
             if (jstr != null) {
                 try {
-                    //metaData = MetaData.parse(jstr, MetaData.class);
+                    metaData = MetaData.parse(jstr, MetaData.class);
 
 
                     //TODO: add temp as there is type to read.
-                    //metaData.setType(DemoUtil.TYPE_MP4);
+                    metaData.setType(DemoUtil.TYPE_MP4);
 
-                    //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
+                    com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
                 } catch (Exception e) {
                 }
             }
@@ -350,7 +368,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                     //TODO: add temp as there is type to read.
                     //metaData.setType(DemoUtil.TYPE_MP4);
 
-                    //com.samsung.trailmix.util.Util.d("VideoActivity Read meta data : " + metaData);
+                    com.samsung.trailmix.util.Util.d("VideoActivity Read currentStatus : " + currentStatus);
                 } catch (Exception e) {
                 }
             }
@@ -364,20 +382,18 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         //play default movie when no data is passed.
         if (metaData == null) {
             metaData = new MetaData();
-            metaData.setId("1");
-            metaData.setTitle("Big Buck Bunny (MP4 Video)");
-            metaData.setDuration(596000);
-            metaData.setType(DemoUtil.TYPE_MP4);
-            metaData.setFile("http://redirector.c.youtube.com/videoplayback?id=604ed5ce52eda7ee&itag=22&source=youtube&"
-                    + "sparams=ip,ipbits,expire,source,id&ip=0.0.0.0&ipbits=0&expire=19000000000&signature="
-                    + "513F28C7FDCBEC60A66C86C9A393556C99DC47FB.04C88036EEE12565A1ED864A875A58F15D8B5300"
-                    + "&key=ik0");
+            metaData.setId("big-buck-bunny");
+            metaData.setTitle("Big Buck Bunny");
+            //metaData.setDuration(596000);
+            metaData.setCover("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.png");
+//            metaData.setType(DemoUtil.TYPE_MP4);
+//            metaData.setFile("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.mp4");
 
-//            metaData.setType(DemoUtil.TYPE_DASH);
-//            metaData.setFile("http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
-//                    + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,source,id,as&ip=0.0.0.0&"
-//                    + "ipbits=0&expire=19000000000&signature=A2716F75795F5D2AF0E88962FFCD10DB79384F29."
-//                    + "84308FF04844498CE6FBCE4731507882B8307798&key=ik0");
+            metaData.setType(DemoUtil.TYPE_DASH);
+            metaData.setFile("http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
+                    + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,source,id,as&ip=0.0.0.0&"
+                    + "ipbits=0&expire=19000000000&signature=A2716F75795F5D2AF0E88962FFCD10DB79384F29."
+                    + "84308FF04844498CE6FBCE4731507882B8307798&key=ik0");
 
 
             //metaData.setType(DemoUtil.TYPE_HLS);
@@ -440,12 +456,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             player.setTextListener(this);
             player.setMetadataListener(this);
 
-            com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + metaData.getDuration());
             com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + currentStatus.getTime());
-
-
-            seekBar.setMax(metaData.getDuration());
             seekTo(currentStatus.getTime());
+            updateDuration();
 
             playerNeedsPrepare = true;
             eventLogger = new EventLogger();
@@ -467,6 +480,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         playControlImageView.setState(PlayControlImageView.State.play);
     }
 
+
     private void releasePlayer() {
         //Cancel media position update.
         handler.removeCallbacks(updateMediaPosition);
@@ -482,9 +496,26 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     private void seekTo(float time) {
         player.seekTo((long) time);
         seekBar.setProgress((int) time);
+        postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString((long) time));
+    }
+
+    private void updateDuration() {
+        if (player != null) {
+            long duration = player.getDuration();
+            if (duration < 0) {
+                duration = metaData.getDuration();
+            }
+
+            //seekBar.setMax(metaData.getDuration());
+            //com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + metaData.getDuration());
+            com.samsung.trailmix.util.Util.d("updateDuration, max value:" + duration);
+            seekBar.setMax((int) duration);
+            durationTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(duration));
+        }
     }
 
     // User controls
+
 
     private void updateButtonVisibilities() {
 //    retryButton.setVisibility(playerNeedsPrepare ? View.VISIBLE : View.GONE);
@@ -547,7 +578,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         toolbar.setVisibility(visible);
         playControlImageView.setVisibility(visible);
 
-//        resetAutoHideTimer();
+        // Hide panels after certain seconds.
+        resetAutoHideTimer();
     }
 
     private void resetAutoHideTimer() {
@@ -573,13 +605,13 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
     @Override
     public void onStateChanged(boolean playWhenReady, int playbackState) {
-        if (playbackState == ExoPlayer.STATE_ENDED) {
-            //showControls();
+        //if (playbackState == ExoPlayer.STATE_ENDED) {
+        //showControls();
 
-            //show retry button
-            //
-            //
-        }
+        //show retry button
+        //
+        //
+        //}
         String text = "playWhenReady=" + playWhenReady + ", playbackState=";
         switch (playbackState) {
             case ExoPlayer.STATE_BUFFERING:
@@ -588,12 +620,17 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             case ExoPlayer.STATE_ENDED:
                 text += "ended";
 
+                shutterView.setVisibility(View.VISIBLE);
+
                 // Display retry button
                 playControlImageView.setState(PlayControlImageView.State.retry);
                 showPanels(View.VISIBLE);
 
                 //Cancel media position update.
                 handler.removeCallbacks(updateMediaPosition);
+
+                //Cancel auto hide task.
+                handler.removeCallbacks(hidePanelThread);
 
                 break;
             case ExoPlayer.STATE_IDLE:
@@ -605,6 +642,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             case ExoPlayer.STATE_READY:
                 text += "ready";
 
+                updateDuration();
 
                 //Show the panels when video is started.
                 showPanels(View.VISIBLE);
@@ -639,7 +677,6 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         playerNeedsPrepare = true;
         updateButtonVisibilities();
         //showControls();
-
 
 
         //Cancel media position update.
