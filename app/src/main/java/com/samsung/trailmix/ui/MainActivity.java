@@ -24,7 +24,6 @@ import com.samsung.trailmix.ui.view.PlayControlImageView;
 import com.samsung.trailmix.util.Settings;
 import com.samsung.trailmix.util.Util;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -52,6 +51,12 @@ public class MainActivity extends BaseActivity {
     // The seek bar in playback control.
     SeekBar seekBar;
 
+    // The media playback position.
+    private TextView postionTextView;
+
+    // The video duration.
+    private TextView durationTextView;
+
     // Create a fixed thread pool containing one thread
     ExecutorService loadLibExecutor = Executors.newFixedThreadPool(1);
 
@@ -60,6 +65,8 @@ public class MainActivity extends BaseActivity {
 
     // The flag shows it is seeking to a new position. The video status event will be ignored during seeking.
     boolean isSeeking = false;
+
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -270,8 +277,8 @@ public class MainActivity extends BaseActivity {
         Util.d("findMetaDataById = " + id);
         for (int i = 0; i < libraryAdapter.getCount(); i++) {
             MetaData md = libraryAdapter.getItem(i);
-            Util.d("metadata id=" + md.getId());
             if (id.equals(md.getId())) {
+                Util.d("    found meta data = " + md);
                 return md;
             }
         }
@@ -337,6 +344,9 @@ public class MainActivity extends BaseActivity {
                 }, 2000);
             }
         });
+
+        postionTextView = (TextView) findViewById(R.id.positionTextView);
+        durationTextView = (TextView) findViewById(R.id.durationTextView);
     }
 
     /**
@@ -354,6 +364,7 @@ public class MainActivity extends BaseActivity {
             currentStatus = new CurrentStatus();
             currentStatus.setId(id);
             currentStatus.setState(CurrentStatus.STATE_PLAYING);
+            currentStatus.setDuration(metaData.getDuration());
             currentStatus.setTime(Settings.instance.readPlaybackPosition(id));
         }
 
@@ -385,8 +396,23 @@ public class MainActivity extends BaseActivity {
             if (metaData != null && currentStatus != null && currentStatus.getId()!=null) {
                 playText.setText(metaData.getTitle());
                 playControl.setSelected(currentStatus.isPlaying());
-                seekBar.setMax((int) currentStatus.getDuration());
-                seekBar.setProgress((int) currentStatus.getTime());
+
+                int duration = (int) currentStatus.getDuration()*1000;
+                if (duration <= 0) {
+                    //Duration in the meta data is seconds.
+                    Util.d("metaData=" + metaData);
+                    duration = metaData.getDuration()*1000;
+                }
+                seekBar.setMax(duration);
+                durationTextView.setText(Util.formatTimeString(duration));
+
+                int postion = 1000 * (int) currentStatus.getTime();
+                seekBar.setProgress(postion);
+                postionTextView.setText(Util.formatTimeString(postion));
+
+                if (playControl.getState()!= PlayControlImageView.State.retry) {
+                    playControl.setState(currentStatus.isPlaying() ? PlayControlImageView.State.play : PlayControlImageView.State.pause);
+                }
 
                 // Make sure the playback control panel is below toolbar.
                 params.addRule(RelativeLayout.BELOW, R.id.toolbar);
@@ -399,6 +425,7 @@ public class MainActivity extends BaseActivity {
 
         // Update the connected service name or app name.
         appText.setText(mMultiscreenManager.isTVConnected() ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
+        iconImageView.setVisibility(mMultiscreenManager.isTVConnected()?View.VISIBLE:View.GONE);
 
         // Update toolbar background color
         toolbar.setBackgroundColor(isPlayingOnTV ? getResources().getColor(R.color.black) : getResources().getColor(R.color.toolbar_background_color));
@@ -419,11 +446,6 @@ public class MainActivity extends BaseActivity {
 
                 // Download video lib.
                 mds = Util.readJsonFromUrl(getString(R.string.playlist_url), MetaData[].class);
-
-                // Assign ID for each video.
-                for (MetaData md : mds) {
-                    md.setId(UUID.randomUUID().toString());
-                }
 
                 // Add videos to UI.
                 addMetaDataIntoLibrary(mds);

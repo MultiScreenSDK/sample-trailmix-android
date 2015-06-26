@@ -16,6 +16,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.samsung.trailmix.R;
@@ -42,6 +43,9 @@ public class BaseActivity extends AppCompatActivity {
 
     //The text in the toolbar.
     protected TextView appText;
+
+    //The app icon or TV icon
+    protected ImageView iconImageView;
 
 
     /**
@@ -205,6 +209,7 @@ public class BaseActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         appText = (TextView)toolbar.findViewById(R.id.appText);
+        iconImageView = (ImageView)findViewById(R.id.iconImageView);
     }
 
     /**

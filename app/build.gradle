@@ -140,4 +140,4 @@ task release(type: Copy) {
     }
 }
 
-release.dependsOn assembleDebug
+release.dependsOn dist

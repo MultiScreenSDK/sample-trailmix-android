@@ -50,7 +50,7 @@ public class JoinOverwriteFragment extends DialogFragment {
 
         // Supply type input as an argument.
         Bundle args = new Bundle();
-        args.putString("name", tvName + " is playing");
+        args.putString("name", tvName + "\nis playing");
         args.putString("title", title);
         args.putString("metadata", metadata);
         f.setArguments(args);

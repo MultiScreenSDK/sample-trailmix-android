@@ -23,9 +23,35 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:paddingLeft="16dp"
-            android:paddingRight="16dp"
             android:progress="0" />
+
+        <RelativeLayout
+            android:id="@+id/mediaTime"
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:paddingRight="@dimen/activity_horizontal_margin"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:minHeight="@dimen/toolbar_height">
+
+            <TextView
+                android:id="@+id/positionTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentLeft="true"
+                android:textSize="12sp"
+                android:textColor="@color/toolbar_color"
+                android:text="00:00:00"/>
+            <TextView
+                android:id="@+id/durationTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignParentRight="true"
+                android:textSize="12sp"
+                android:textColor="@color/toolbar_color"
+                android:text="00:00:00"/>
+        </RelativeLayout>
 
         <LinearLayout
             android:id="@+id/playingLayout"
@@ -34,10 +60,9 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingBottom="8dp"
-            android:paddingLeft="2dp"
+            android:paddingLeft="16dp"
             android:paddingRight="16dp"
-            android:paddingTop="16dp">
+            android:layout_marginTop="16dp">
 
             <com.samsung.trailmix.ui.view.PlayControlImageView
                 android:id="@+id/playControl"

@@ -19,6 +19,7 @@ import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.CaptioningManager;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -54,6 +55,7 @@ import com.samsung.trailmix.player.EventLogger;
 import com.samsung.trailmix.player.SmoothStreamingTestMediaDrmCallback;
 import com.samsung.trailmix.player.WidevineTestMediaDrmCallback;
 import com.samsung.trailmix.ui.view.PlayControlImageView;
+import com.squareup.picasso.Picasso;
 
 import java.util.Map;
 
@@ -69,25 +71,21 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
 
     private EventLogger eventLogger;
-//    private MediaController mediaController;
 
-
-    /**
-     * The shutter view when we pause the video
-     */
+    // The shutter view when we pause the video
     private View shutterView;
 
-    /**
-     * The caption view
-     */
+    // The caption view
     private SubtitleView subtitleView;
 
 
     //The view to render debug info.
     private TextView debugTextView = null;
 
-
+    // The exo player
     private DemoPlayer player;
+
+    // Flag to call prepare() method.
     private boolean playerNeedsPrepare;
 
     // The flag whether or not to use background audio, by default it is false.
@@ -96,11 +94,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     //The current playing state.
     private CurrentStatus currentStatus;
 
-
     private AudioCapabilitiesReceiver audioCapabilitiesReceiver;
     private AudioCapabilities audioCapabilities;
 
-    //the video to display video.
+    // The video to display video.
     private VideoSurfaceView surfaceView;
 
     private PlayControlImageView playControlImageView;
@@ -116,6 +113,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
     // The video duration.
     private TextView durationTextView;
+
+    // The cover screen of the movie displayed when the video is finished.
+    private ImageView cover;
 
     //---------------------------- Activity methods------------------------------------------------
 
@@ -169,6 +169,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             }
         });
         shutterView = findViewById(R.id.shutter);
+        cover = (ImageView)findViewById(R.id.cover);
+        Picasso.with(this).load(com.samsung.trailmix.util.Util.getUriFromUrl(metaData.getCover())).into(cover);
         controls_root = (RelativeLayout) findViewById(R.id.controls_root);
         seekBar = (SeekBar) findViewById(R.id.videoSeekbar);
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -183,7 +185,14 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
                 if (player != null) {
-                    player.seekTo(seekBar.getProgress());
+
+                    // When in retry mode and seekbar is pressed, automatically play from the position.
+                    if (playControlImageView.getState() == PlayControlImageView.State.retry) {
+                        cover.setVisibility(View.GONE);
+                        playControlImageView.setState(PlayControlImageView.State.play);
+                    }
+
+                    seekTo(seekBar.getProgress());
                 }
             }
         });
@@ -197,12 +206,11 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         playControlImageView = (PlayControlImageView) findViewById(R.id.playControl);
         playControlImageView.setOnClickListener(this);
 
-
-
-//        updateUI();
-
         // Update the movie title.
         appText.setText(metaData.getTitle());
+
+        // Hide the TV icon.
+        iconImageView.setVisibility(View.GONE);
 
         DemoUtil.setDefaultCookieManager();
     }
@@ -309,7 +317,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             metaData = new MetaData();
             metaData.setId("big-buck-bunny");
             metaData.setTitle("Big Buck Bunny");
-            //metaData.setDuration(596000);
+            metaData.setDuration(33000);
             metaData.setCover("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.png");
             metaData.setType("mp4");
             metaData.setFile("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.mp4");
@@ -391,9 +399,11 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             player.setTextListener(this);
             player.setMetadataListener(this);
 
-            com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + currentStatus.getTime());
-            seekTo(currentStatus.getTime());
             updateDuration();
+
+            // The time is in seconds.
+            com.samsung.trailmix.util.Util.d("preparePlayer, seek to:" + currentStatus.getTime()*1000);
+            seekTo(currentStatus.getTime()*1000);
 
             playerNeedsPrepare = true;
             eventLogger = new EventLogger();
@@ -408,10 +418,19 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             playerNeedsPrepare = false;
         }
         player.setSurface(surfaceView.getHolder().getSurface());
-        player.setPlayWhenReady(true);
 
-        // update the play control button
-        playControlImageView.setState(PlayControlImageView.State.play);
+        if (currentStatus != null && !currentStatus.isPlaying()) {
+
+            // Movie is paused.
+            playControlImageView.setState(PlayControlImageView.State.pause);
+        } else {
+
+            //Play video when there is no current statua or it is playing state.
+            player.setPlayWhenReady(true);
+
+            // update the play control button
+            playControlImageView.setState(PlayControlImageView.State.play);
+        }
     }
 
 
@@ -445,19 +464,24 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      * Update the video duration on UI.
      */
     private void updateDuration() {
+        long duration = 0;
+
         if (player != null) {
-            long duration = player.getDuration();
+            duration = player.getDuration();
 
             // If we could not get the duration from player, use the duration from metadata.
             if (duration < 0) {
-                duration = metaData.getDuration();
+                // The duration in meta data is seconds.
+                duration = metaData.getDuration()*1000;
             }
-
-            // Update the seekbar and duration textview.
-            com.samsung.trailmix.util.Util.d("updateDuration, max value:" + duration);
-            seekBar.setMax((int) duration);
-            durationTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(duration));
+        } else {
+            duration = metaData.getDuration()*1000;
         }
+
+        // Update the seekbar and duration textview.
+        com.samsung.trailmix.util.Util.d("updateDuration, max value:" + duration);
+        seekBar.setMax((int) duration);
+        durationTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(duration));
     }
 
     // Caption related functions.
@@ -551,13 +575,14 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             PlayControlImageView.State state = playControlImageView.getState();
             if (state == PlayControlImageView.State.retry) {
 
-                shutterView.setVisibility(View.GONE);
+                // Hide the cover image.
+                cover.setVisibility(View.GONE);
+
                 // Replay from beginning.
                 currentStatus.setTime(0);
-                //seekTo(0);
+
                 releasePlayer();
                 preparePlayer();
-//                playControlImageView.setState(PlayControlImageView.State.play);
             } else if (state == PlayControlImageView.State.pause) {
                 player.getPlayerControl().start();
                 playControlImageView.setState(PlayControlImageView.State.play);
@@ -606,8 +631,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             case ExoPlayer.STATE_ENDED:
                 text += "ended";
 
-                // Display shutter view when movie is ended.
-                shutterView.setVisibility(View.VISIBLE);
+                // Display cover view when movie is ended.
+                cover.setVisibility(View.VISIBLE);
 
                 // Display retry button
                 playControlImageView.setState(PlayControlImageView.State.retry);
@@ -667,6 +692,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     @Override
     public void onVideoSizeChanged(int width, int height, float pixelWidthAspectRatio) {
         shutterView.setVisibility(View.GONE);
+        cover.setVisibility(View.GONE);
         surfaceView.setVideoWidthHeightRatio(
                 height == 0 ? 1 : (width * pixelWidthAspectRatio) / height);
     }

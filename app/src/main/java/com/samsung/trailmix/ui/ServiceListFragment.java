@@ -142,7 +142,6 @@ public class ServiceListFragment extends DialogFragment {
                 TextView selectedServiceText = (TextView) view.findViewById(R.id.selectedServiceText);
                 selectedServiceText.setText(Util.getFriendlyTvName(MultiscreenManager.getInstance().getConnectedService().getName()));
 
-                //Update the disconnect button with user color.
                 //Button btnDisconnect = (Button) view.findViewById(R.id.disconnectButton);
                 TextView btnDisconnect = (TextView) view.findViewById(R.id.disconnectButton);
 
