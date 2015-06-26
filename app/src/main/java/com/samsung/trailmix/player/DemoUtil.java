@@ -33,70 +33,99 @@ import java.util.Map;
  */
 public class DemoUtil {
 
-  public static final int TYPE_DASH = 0;
-  public static final int TYPE_SS = 1;
-  public static final int TYPE_HLS = 2;
-  public static final int TYPE_MP4 = 3;
-  public static final int TYPE_MP3 = 4;
-  public static final int TYPE_M4A = 5;
-  public static final int TYPE_WEBM = 6;
-  public static final int TYPE_TS = 7;
-  public static final int TYPE_AAC = 8;
+    public static final int TYPE_DASH = 0;
+    public static final int TYPE_SS = 1;
+    public static final int TYPE_HLS = 2;
+    public static final int TYPE_MP4 = 3;
+    public static final int TYPE_MP3 = 4;
+    public static final int TYPE_M4A = 5;
+    public static final int TYPE_WEBM = 6;
+    public static final int TYPE_TS = 7;
+    public static final int TYPE_AAC = 8;
 
-  private static final CookieManager defaultCookieManager;
 
-  static {
-    defaultCookieManager = new CookieManager();
-    defaultCookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
-  }
+    public static final String[] TYPE_STRING = {"dash", "ss","hls", "mp4", "mp3", "m4a", "webm",
+        "ts", "aac"};
 
-  public static byte[] executePost(String url, byte[] data, Map<String, String> requestProperties)
-      throws IOException {
-    HttpURLConnection urlConnection = null;
-    try {
-      urlConnection = (HttpURLConnection) new URL(url).openConnection();
-      urlConnection.setRequestMethod("POST");
-      urlConnection.setDoOutput(data != null);
-      urlConnection.setDoInput(true);
-      if (requestProperties != null) {
-        for (Map.Entry<String, String> requestProperty : requestProperties.entrySet()) {
-          urlConnection.setRequestProperty(requestProperty.getKey(), requestProperty.getValue());
+    private static final CookieManager defaultCookieManager;
+
+    static {
+        defaultCookieManager = new CookieManager();
+        defaultCookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
+    }
+
+    public static byte[] executePost(String url, byte[] data, Map<String, String> requestProperties)
+            throws IOException {
+        HttpURLConnection urlConnection = null;
+        try {
+            urlConnection = (HttpURLConnection) new URL(url).openConnection();
+            urlConnection.setRequestMethod("POST");
+            urlConnection.setDoOutput(data != null);
+            urlConnection.setDoInput(true);
+            if (requestProperties != null) {
+                for (Map.Entry<String, String> requestProperty : requestProperties.entrySet()) {
+                    urlConnection.setRequestProperty(requestProperty.getKey(), requestProperty.getValue());
+                }
+            }
+            if (data != null) {
+                OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
+                out.write(data);
+                out.close();
+            }
+            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
+            return convertInputStreamToByteArray(in);
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
         }
-      }
-      if (data != null) {
-        OutputStream out = new BufferedOutputStream(urlConnection.getOutputStream());
-        out.write(data);
-        out.close();
-      }
-      InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-      return convertInputStreamToByteArray(in);
-    } finally {
-      if (urlConnection != null) {
-        urlConnection.disconnect();
-      }
     }
-  }
 
-  private static byte[] convertInputStreamToByteArray(InputStream inputStream) throws IOException {
-    byte[] bytes = null;
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
-    byte data[] = new byte[1024];
-    int count;
-    while ((count = inputStream.read(data)) != -1) {
-      bos.write(data, 0, count);
+    private static byte[] convertInputStreamToByteArray(InputStream inputStream) throws IOException {
+        byte[] bytes = null;
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        byte data[] = new byte[1024];
+        int count;
+        while ((count = inputStream.read(data)) != -1) {
+            bos.write(data, 0, count);
+        }
+        bos.flush();
+        bos.close();
+        inputStream.close();
+        bytes = bos.toByteArray();
+        return bytes;
     }
-    bos.flush();
-    bos.close();
-    inputStream.close();
-    bytes = bos.toByteArray();
-    return bytes;
-  }
 
-  public static void setDefaultCookieManager() {
-    CookieHandler currentHandler = CookieHandler.getDefault();
-    if (currentHandler != defaultCookieManager) {
-      CookieHandler.setDefault(defaultCookieManager);
+    public static void setDefaultCookieManager() {
+        CookieHandler currentHandler = CookieHandler.getDefault();
+        if (currentHandler != defaultCookieManager) {
+            CookieHandler.setDefault(defaultCookieManager);
+        }
     }
-  }
+
+    /**
+     * Parse the media type string to media type int value.
+     * @param typeStr the media type string.
+     * @return the value of TYPE_XXXX or TYPE_MP4 if no type is matched.
+     */
+    public static int parseMediaType(String typeStr) {
+        int type = TYPE_MP4;
+        if (typeStr != null) {
+
+            // search the pre-defined format string.
+            for(int i=0;i<TYPE_STRING.length;i++) {
+                String ts = TYPE_STRING[i];
+                if (ts.equalsIgnoreCase(typeStr)) {
+
+                    //find the match type, get the type value.
+                    type = i;
+                    break;
+                }
+            }
+        }
+
+        return type;
+    }
+
 
 }

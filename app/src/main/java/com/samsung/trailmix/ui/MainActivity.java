@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
  */
 public class MainActivity extends BaseActivity {
 
-
     // The adapter to display tracks from library.
     LibraryAdapter libraryAdapter;
 
@@ -47,17 +46,14 @@ public class MainActivity extends BaseActivity {
     // The video information in playback control panel.
     TextView playText;
 
-    //The play/pause control in playback control panel.
+    // The play/pause control in playback control panel.
     PlayControlImageView playControl;
 
-    //The seek bar in playback control.
+    // The seek bar in playback control.
     SeekBar seekBar;
 
     // Create a fixed thread pool containing one thread
     ExecutorService loadLibExecutor = Executors.newFixedThreadPool(1);
-
-//    // Current playing metadata
-//    MetaData metaData;
 
     // Current playing state
     CurrentStatus currentStatus;
@@ -283,7 +279,7 @@ public class MainActivity extends BaseActivity {
         return null;
     }
 
-    //Set up the playback panel.
+    // Set up the playback panel.
     private void setupPlaybackPanel() {
         // Playback control panel.
         playControlLayout = (LinearLayout) findViewById(R.id.playControlLayout);
@@ -297,8 +293,6 @@ public class MainActivity extends BaseActivity {
         playControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //playControl.setSelected(!playControl.isSelected());
-
                 PlayControlImageView.State state = playControl.getState();
                 if (state == PlayControlImageView.State.retry) {
 
@@ -345,6 +339,9 @@ public class MainActivity extends BaseActivity {
         });
     }
 
+    /**
+     * Launch local video player screen.
+     */
     private void openLocalVideoPlayer() {
         // Return if no video is playing on TV.
         if (metaData == null) {
@@ -453,6 +450,10 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+
+    /**
+     * Play a new video on TV.
+     */
     private void play() {
         Util.d("play() is called, metadata=" + metaData);
         if (metaData != null) {

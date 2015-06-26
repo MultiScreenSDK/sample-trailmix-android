@@ -41,9 +41,7 @@ public class MetaData extends Base implements Cloneable {
     private String year;
     private String cast;
     private int duration;
-    private int type;
-
-
+    private String type;
 
 
 
