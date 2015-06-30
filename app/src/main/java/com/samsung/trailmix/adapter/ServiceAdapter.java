@@ -133,7 +133,7 @@ public class ServiceAdapter extends BaseAdapter {
 
         //Set the service icon according to the service type.
         if (MultiscreenManager.getInstance().getServiceType(service) == MultiscreenManager.ServiceType.Speaker) {
-            //holder.serviceIcon.setImageResource(R.drawable.ic_speaker_gray);
+            holder.serviceIcon.setImageResource(R.drawable.ic_speaker_gray);
         } else {
             holder.serviceIcon.setImageResource(R.drawable.ic_tv_gray);
         }

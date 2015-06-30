@@ -271,16 +271,19 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         @Override
         public void run() {
             if (player != null) {
-
-                long position = player.getCurrentPosition();
-                seekBar.setProgress((int) position);
-                postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
+                updateMediaPosition((int)player.getCurrentPosition());
 
                 // Start to update the media position at next second.
                 handler.postDelayed(updateMediaPosition, 1000);
             }
         }
     };
+
+    private void updateMediaPosition(int position) {
+        seekBar.setProgress((int) position);
+        postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
+        currentStatus.setTime(position/1000);
+    }
 
     /**
      * Read the playback information from intent.
@@ -456,8 +459,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      */
     private void seekTo(float time) {
         player.seekTo((long) time);
-        seekBar.setProgress((int) time);
-        postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString((long) time));
+        updateMediaPosition((int)time);
     }
 
     /**
@@ -780,6 +782,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             // Exit the local player.
             finish();
         }
+    }
+
+    public void overwritePlaying() {
+        mMultiscreenManager.play(metaData, (int)currentStatus.getTime());
     }
 
 }

@@ -255,10 +255,7 @@ public class BaseActivity extends AppCompatActivity {
         newFragment.show(ft, "dialog");
     }
 
-    public void overwritePlaying(String metatdata) {
-        metaData = MetaData.parse(metatdata,MetaData.class);
-        mMultiscreenManager.play(metaData);
-    }
+
 
     public void displayConnectingMessage(String tvName) {
         //final String message = String.format(getString(R.string.connect_to_message), Util.getFriendlyTvName(tvName));

@@ -88,7 +88,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
                 android:scaleType="fitCenter"
-                android:src="@drawable/ic_tv_gray" />
+                android:src="@drawable/ic_tv_white" />
 
             <TextView
                 android:id="@+id/selectedServiceText"

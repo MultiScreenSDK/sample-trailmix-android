@@ -17,7 +17,7 @@
         android:id="@+id/iconImageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_tv_gray"/>
+        android:src="@drawable/ic_tv_white"/>
 
     <TextView
         android:id="@+id/appText"

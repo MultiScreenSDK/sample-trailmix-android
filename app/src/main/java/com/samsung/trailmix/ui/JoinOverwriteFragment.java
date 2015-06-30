@@ -103,13 +103,22 @@ public class JoinOverwriteFragment extends DialogFragment {
                 public void onClick(View v) {
                     dismiss();
 
-                    BaseActivity ba = (BaseActivity) getActivity();
-                    ba.overwritePlaying(metadata);
+                    if (getActivity() instanceof MainActivity) {
 
-                    if (getActivity() instanceof VideoActivity) {
-                        getActivity().finish();
+                        MainActivity ma = (MainActivity) getActivity();
+
+                        // Indicate that it is switching video now.
+                        ma.isSwitchingVideo = true;
+
+                        //Overwrite playing
+                        ma.overwritePlaying(metadata);
+
+                        //Update UI.
+                        ma.updateUI();
                     } else {
-                        ((MainActivity)getActivity()).updateUI();
+                        VideoActivity va = (VideoActivity) getActivity();
+                        va.overwritePlaying();
+                        getActivity().finish();
                     }
                 }
             });

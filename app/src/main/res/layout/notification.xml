@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="450dp"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:background="@color/notification_background">
+
+    <ImageView
+        android:id="@+id/playControl"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
+        android:src="@drawable/ic_pause_dark_sm"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:orientation="horizontal"
+        android:layout_toLeftOf="@+id/playControl">
+
+        <ImageView
+            android:id="@+id/coverImage"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:scaleType="centerCrop"
+            android:src="@drawable/appicon_test"/>
+
+        <TextView
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="8dp"
+            android:layout_marginLeft="@dimen/activity_horizontal_margin"
+            android:textColor="@color/white"
+            android:singleLine="false"
+            android:text="movie title\nline1\nline2\nline3"/>
+    </LinearLayout>
+</RelativeLayout>
+
+    <!--android:padding="@dimen/activity_horizontal_margin"-->

@@ -2,13 +2,22 @@
 
 package com.samsung.trailmix.ui;
 
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
@@ -21,17 +30,20 @@ import com.samsung.trailmix.multiscreen.events.VideoStatusEvent;
 import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.ui.view.PlayControlImageView;
-import com.samsung.trailmix.util.Settings;
 import com.samsung.trailmix.util.Util;
+import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static android.app.Notification.FLAG_NO_CLEAR;
 
 
 /**
  * Initial activity for the application.
  */
 public class MainActivity extends BaseActivity {
+    public static final int NOTIFICATION_ID = 100;
 
     // The adapter to display tracks from library.
     LibraryAdapter libraryAdapter;
@@ -66,6 +78,11 @@ public class MainActivity extends BaseActivity {
     // The flag shows it is seeking to a new position. The video status event will be ignored during seeking.
     boolean isSeeking = false;
 
+    // Switching video when it is true.
+    boolean isSwitchingVideo = false;
+
+    // The broadcast listener to receive play action from notification.
+    PlayActionBroadcastReceiver broadcastReceiver;
 
 
     @Override
@@ -98,10 +115,11 @@ public class MainActivity extends BaseActivity {
 
                 if (mMultiscreenManager.isTVConnected()) {
 
-                    if (currentStatus != null && !currentStatus.getId().equals(md.getId())) {
+                    if (currentStatus != null && currentStatus.getId() != null &&
+                            !currentStatus.getId().equals(md.getId())) {
                         // something different is playing on TV.
                         String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
-                        showJoinOverwritetDialog(name, currentStatus.getTitle(), md.toJsonString() );
+                        showJoinOverwritetDialog(name, currentStatus.getTitle(), md.toJsonString());
                     } else {
                         metaData = md;
 
@@ -137,6 +155,8 @@ public class MainActivity extends BaseActivity {
         // Release multiscreen manager
         mMultiscreenManager.release();
         mMultiscreenManager = null;
+
+        clearNotification();
 
         super.onDestroy();
     }
@@ -184,6 +204,10 @@ public class MainActivity extends BaseActivity {
         updateUI();
     }
 
+    public void overwritePlaying(String metatdata) {
+        metaData = MetaData.parse(metatdata,MetaData.class);
+        mMultiscreenManager.play(metaData);
+    }
 
     // This method will be called when a app state event is received.
     public void onEvent(AppStateEvent event) {
@@ -200,6 +224,9 @@ public class MainActivity extends BaseActivity {
         }
 
         updateUI();
+
+        // Show notification when join the TV. Make sure it is called after updateUI().
+        showNotification();
     }
 
     // This method will be called when a app state event is received.
@@ -209,9 +236,6 @@ public class MainActivity extends BaseActivity {
         // Only handle the event when it is not seeking.
         if (!isSeeking) {
             currentStatus = event.status;
-
-            // Save the position
-            Settings.instance.writePlaybackPosition(currentStatus.getId(), currentStatus.getTime());
 
             //Retrieve the metadata if it is null.
             if (metaData == null) {
@@ -225,11 +249,23 @@ public class MainActivity extends BaseActivity {
     public void onEvent(PlaybackEvent event) {
         Util.d("MainActivity  PlaybackEvent: " + event.toString());
 
-        // When video playback is finished, show retry button.
-        if (!event.isStart()) {
-//            currentStatus = null;
-//            updateUI();
-            playControl.setState(PlayControlImageView.State.retry);
+        // Set play control button according to playback state.
+        if (event.isStart()) {
+            //Util.d("MainActivity  PlaybackEvent isStart: " + event.isStart());
+            //Util.d("MainActivity  PlaybackEvent isSwitchingVideo: " + isSwitchingVideo);
+
+            isSwitchingVideo = false;
+            playControl.setState(PlayControlImageView.State.play);
+
+            // Show notification
+            showNotification();
+        } else {
+
+            //Show the retry button only when it is not switching video.
+            if (!isSwitchingVideo) {
+                playControl.setState(PlayControlImageView.State.retry);
+                showNotification();
+            }
         }
     }
 
@@ -255,7 +291,10 @@ public class MainActivity extends BaseActivity {
     private void handleDisconnect() {
         Util.d("TV is disconnected.");
 
-        //Continue to play the video with local player.
+        // Remove notification.
+        clearNotification();
+
+        // Continue to play the video with local player.
         openLocalVideoPlayer();
 
         // Hide the playback control panel.
@@ -266,6 +305,7 @@ public class MainActivity extends BaseActivity {
 
     /**
      * Find the metadata by given id.
+     *
      * @param id
      * @return
      */
@@ -297,22 +337,11 @@ public class MainActivity extends BaseActivity {
         // Play/Pause button.
         playControl = (PlayControlImageView) findViewById(R.id.playControl);
         playControl.setState(PlayControlImageView.State.play);
+        playControl.setUseSmallIcon(true);
         playControl.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PlayControlImageView.State state = playControl.getState();
-                if (state == PlayControlImageView.State.retry) {
-
-                    // Replay from beginning.
-                    play();
-                    playControl.setState(PlayControlImageView.State.play);
-                } else if (state == PlayControlImageView.State.pause) {
-                    play();
-                    playControl.setState(PlayControlImageView.State.play);
-                } else {
-                    mMultiscreenManager.pause();
-                    playControl.setState(PlayControlImageView.State.pause);
-                }
+                handleOnPlayControlButtonClick();
             }
         });
         seekBar = (SeekBar) findViewById(R.id.seekBar);
@@ -332,6 +361,7 @@ public class MainActivity extends BaseActivity {
 
                 // Seek bar is changed.
                 isSeeking = true;
+                postionTextView.setText(Util.formatTimeString(seekBar.getProgress() * 1000));
                 mMultiscreenManager.seek(seekBar.getProgress());
 
                 // Give some time to located to new position.
@@ -347,6 +377,24 @@ public class MainActivity extends BaseActivity {
 
         postionTextView = (TextView) findViewById(R.id.positionTextView);
         durationTextView = (TextView) findViewById(R.id.durationTextView);
+    }
+
+    private void handleOnPlayControlButtonClick() {
+        PlayControlImageView.State state = playControl.getState();
+        if (state == PlayControlImageView.State.retry) {
+
+            // Replay from beginning.
+            play();
+            playControl.setState(PlayControlImageView.State.play);
+        } else if (state == PlayControlImageView.State.pause) {
+            play();
+            playControl.setState(PlayControlImageView.State.play);
+        } else {
+            mMultiscreenManager.pause();
+            playControl.setState(PlayControlImageView.State.pause);
+        }
+
+        showNotification();
     }
 
     /**
@@ -365,7 +413,7 @@ public class MainActivity extends BaseActivity {
             currentStatus.setId(id);
             currentStatus.setState(CurrentStatus.STATE_PLAYING);
             currentStatus.setDuration(metaData.getDuration());
-            currentStatus.setTime(Settings.instance.readPlaybackPosition(id));
+//            currentStatus.setTime(Settings.instance.readPlaybackPosition(id));
         }
 
         Intent intent = new Intent(MainActivity.this, VideoActivity.class);
@@ -393,24 +441,24 @@ public class MainActivity extends BaseActivity {
         if (isPlayingOnTV) {
 
             // Update video information when playing on TV.
-            if (metaData != null && currentStatus != null && currentStatus.getId()!=null) {
+            if (metaData != null && currentStatus != null && currentStatus.getId() != null) {
                 playText.setText(metaData.getTitle());
                 playControl.setSelected(currentStatus.isPlaying());
 
-                int duration = (int) currentStatus.getDuration()*1000;
+                int duration = (int) currentStatus.getDuration();
                 if (duration <= 0) {
                     //Duration in the meta data is seconds.
                     Util.d("metaData=" + metaData);
-                    duration = metaData.getDuration()*1000;
+                    duration = metaData.getDuration();
                 }
                 seekBar.setMax(duration);
-                durationTextView.setText(Util.formatTimeString(duration));
+                durationTextView.setText(Util.formatTimeString(duration * 1000));
 
-                int postion = 1000 * (int) currentStatus.getTime();
-                seekBar.setProgress(postion);
-                postionTextView.setText(Util.formatTimeString(postion));
+                int position = (int) currentStatus.getTime();
+                seekBar.setProgress(position);
+                postionTextView.setText(Util.formatTimeString(position * 1000));
 
-                if (playControl.getState()!= PlayControlImageView.State.retry) {
+                if (playControl.getState() != PlayControlImageView.State.retry) {
                     playControl.setState(currentStatus.isPlaying() ? PlayControlImageView.State.play : PlayControlImageView.State.pause);
                 }
 
@@ -425,7 +473,7 @@ public class MainActivity extends BaseActivity {
 
         // Update the connected service name or app name.
         appText.setText(mMultiscreenManager.isTVConnected() ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
-        iconImageView.setVisibility(mMultiscreenManager.isTVConnected()?View.VISIBLE:View.GONE);
+        iconImageView.setVisibility(mMultiscreenManager.isTVConnected() ? View.VISIBLE : View.GONE);
 
         // Update toolbar background color
         toolbar.setBackgroundColor(isPlayingOnTV ? getResources().getColor(R.color.black) : getResources().getColor(R.color.toolbar_background_color));
@@ -480,10 +528,137 @@ public class MainActivity extends BaseActivity {
         Util.d("play() is called, metadata=" + metaData);
         if (metaData != null) {
 
-            float position = Settings.instance.readPlaybackPosition(metaData.getId());
+//            float position = Settings.instance.readPlaybackPosition(metaData.getId());
             mMultiscreenManager.play(metaData);
+
+            //Reset the progressbar.
+            seekBar.setProgress(0);
+            seekBar.setMax(metaData.getDuration());
         }
     }
 
+    private void showNotification() {
+        Notification notification = getNotification(metaData);
+        if (notification != null) {
+            // Clear previous notification.
+            clearNotification();
 
+            NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            mNotificationManager.notify(NOTIFICATION_ID, notification);
+        }
+
+        registerBroadcastListener();
+    }
+
+    private void clearNotification() {
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(NOTIFICATION_ID);
+
+        unregisterBroadcastListener();
+    }
+
+    private Notification getNotification(MetaData metaData) {
+        if (metaData == null) {
+            return null;
+        }
+
+        // Using RemoteViews to bind custom layouts into Notification
+        RemoteViews notificationView = new RemoteViews(
+                getApplicationContext().getPackageName(), R.layout.notification
+        );
+
+        // Locate and set the Text into customnotificationtext.xml TextViews
+        notificationView.setTextViewText(R.id.content, metaData.getTitle());
+
+
+        // Create pending intent and notification instance.
+        PendingIntent pIntent = PendingIntent.getActivity(
+                this,
+                NOTIFICATION_ID,
+                getIntent(),
+                PendingIntent.FLAG_UPDATE_CURRENT);
+        Notification n = new NotificationCompat.Builder(getApplicationContext())
+                // Set Icon
+                .setSmallIcon(R.drawable.appicon_trailmix)
+                .setAutoCancel(false)
+                .setContentTitle("Boarding pass")
+                .setContentText("Click for more info")
+                // Set PendingIntent into Notification
+                .setContentIntent(pIntent).build();
+
+        // Do not clear the notification
+        n.flags |= FLAG_NO_CLEAR;
+
+        //Load the cover image.
+        Picasso.with(this).load(Uri.parse(metaData.getCover())).
+                into(notificationView, R.id.coverImage, NOTIFICATION_ID, n);
+
+        // This is the intent that is supposed to be called when the playback button is clicked
+        Intent switchIntent = null;
+        if (playControl.getState() == PlayControlImageView.State.play) {
+            switchIntent = new Intent(PlayActionBroadcastReceiver.ACTION_PAUSE);
+            notificationView.setImageViewResource(R.id.playControl, R.drawable.ic_pause_dark_sm);
+        }else if (playControl.getState() == PlayControlImageView.State.pause) {
+            switchIntent = new Intent(PlayActionBroadcastReceiver.ACTION_PLAY);
+            notificationView.setImageViewResource(R.id.playControl, R.drawable.ic_play_dark_sm);
+        } else {
+            switchIntent = new Intent(PlayActionBroadcastReceiver.ACTION_REPLAY);
+            notificationView.setImageViewResource(R.id.playControl, R.drawable.ic_replay_dark_sm);
+        }
+
+        PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(this, 0, switchIntent, 0);
+        notificationView.setOnClickPendingIntent(R.id.playControl, pendingSwitchIntent);
+
+        //Use customized layout.
+        n.contentView = notificationView;
+
+        return n;
+    }
+
+    /**
+     * Register broadcast receiver to receive play/pause/replay action from notification.
+     */
+    private void registerBroadcastListener() {
+        // Remove previous receiver if it is not null.
+        if (broadcastReceiver != null) {
+            unregisterBroadcastListener();
+        }
+
+        // Create intent filter.
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+
+        // set the custom action
+        intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_PLAY);
+        intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_PAUSE);
+        intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_REPLAY);
+
+        // register the receiver
+        broadcastReceiver = new PlayActionBroadcastReceiver();
+        registerReceiver(broadcastReceiver, intentFilter);
+    }
+
+    private void unregisterBroadcastListener() {
+        if (broadcastReceiver != null) {
+            try {
+                unregisterReceiver(broadcastReceiver);
+            }catch (Exception e){}
+        }
+
+        broadcastReceiver = null;
+    }
+
+    public class PlayActionBroadcastReceiver extends BroadcastReceiver {
+        public static final String ACTION_PLAY = "com.samsung.trailmix.ACTION_PLAY";
+        public static final String ACTION_PAUSE = "com.samsung.trailmix.ACTION_PAUSE";
+        public static final String ACTION_REPLAY = "com.samsung.trailmix.ACTION_REPLAY";
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Util.d("intent action = " + action);
+
+            handleOnPlayControlButtonClick();
+        }
+    }
 }

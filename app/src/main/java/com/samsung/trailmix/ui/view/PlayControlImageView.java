@@ -15,6 +15,7 @@ public class PlayControlImageView extends ImageView {
     }
 
     private State state = null;
+    private boolean useSmallIcon = false;
 
     public PlayControlImageView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -36,15 +37,19 @@ public class PlayControlImageView extends ImageView {
     public void updateImageRes() {
         switch (state) {
             case play:
-                setImageResource(R.drawable.ic_pause_dark);
+                setImageResource(useSmallIcon?R.drawable.ic_pause_dark_sm:R.drawable.ic_pause_dark);
                 break;
             case pause:
-                setImageResource(R.drawable.ic_play_dark);
+                setImageResource(useSmallIcon?R.drawable.ic_play_dark_sm:R.drawable.ic_play_dark);
                 break;
             case retry:
-                setImageResource(R.drawable.ic_replay_dark);
+                setImageResource(useSmallIcon?R.drawable.ic_replay_dark_sm:R.drawable.ic_replay_dark);
                 break;
         }
     }
 
+    public void setUseSmallIcon(boolean useSmallIcon) {
+        this.useSmallIcon = useSmallIcon;
+        updateImageRes();
+    }
 }

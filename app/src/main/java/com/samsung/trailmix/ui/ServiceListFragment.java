@@ -132,10 +132,10 @@ public class ServiceListFragment extends DialogFragment {
                 ImageView selectedServiceIcon = (ImageView) view.findViewById(R.id.selectedServiceIcon);
                 if (MultiscreenManager.getInstance().getConnectedServiceType() == MultiscreenManager.ServiceType.Speaker) {
                     //The speaker is connected
-                    //selectedServiceIcon.setImageResource(R.drawable.ic_speaker_gray);
+                    selectedServiceIcon.setImageResource(R.drawable.ic_speaker_white);
                 } else if (MultiscreenManager.getInstance().getConnectedServiceType() == MultiscreenManager.ServiceType.TV) {
                     //The TV or TV simulator is connected.
-                    //selectedServiceIcon.setImageResource(R.drawable.ic_tv_white);
+                    selectedServiceIcon.setImageResource(R.drawable.ic_tv_white);
                 }
 
                 //Display the connected service name

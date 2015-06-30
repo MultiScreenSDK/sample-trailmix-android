@@ -130,14 +130,10 @@ task release(type: Copy) {
     from(apkOutputDir) {
         include "${appName}*.apk"
     }
-    into releaseDir
-
-    println "------------Rename the APK---------------"
-    println "${appName}.apk"
+    into distDir
 
     rename { String fileName ->
-        "${appName}.apk"
+        "${appName}-latest.apk"
     }
 }
-
-release.dependsOn dist
+release.dependsOn assembleDebug

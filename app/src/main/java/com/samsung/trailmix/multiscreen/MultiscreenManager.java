@@ -46,6 +46,9 @@ import com.samsung.trailmix.multiscreen.model.CurrentStatus;
 import com.samsung.trailmix.multiscreen.model.MetaData;
 import com.samsung.trailmix.util.Util;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -608,6 +611,20 @@ public class MultiscreenManager {
     public void play(MetaData metaData) {
         if (metaData != null) {
             sendToTV(CMD_PLAY, metaData.getJsonObject(), Message.TARGET_HOST);
+        }
+    }
+
+    /**
+     * Play the video from with given start time.
+     */
+    public void play(MetaData metaData, int time) {
+        if (metaData != null) {
+            JSONObject jo = metaData.getJsonObject();
+            try {
+                jo.put("time", time);
+            } catch (JSONException e) {
+            }
+            sendToTV(CMD_PLAY, jo, Message.TARGET_HOST);
         }
     }
 
