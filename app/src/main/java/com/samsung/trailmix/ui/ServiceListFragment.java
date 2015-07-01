@@ -72,11 +72,11 @@ public class ServiceListFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Read user color.
+        // Read user color.
         mColor = getArguments().getInt("color");
 
 
-        //Create service adapter.
+        // Create service adapter.
         serviceAdapter = new ServiceAdapter(getActivity());
     }
 
@@ -101,13 +101,13 @@ public class ServiceListFragment extends DialogFragment {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                    //When item is clicked, get the service clicked first.
+                    // When item is clicked, get the service clicked first.
                     Service service = serviceAdapter.getItem(position);
 
                     Activity activity = getActivity();
                     if (activity instanceof MainActivity) {
 
-                        //Display connecting message if it is in connection screen.
+                        // Display connecting message if it is in connection screen.
                         BaseActivity ba = (BaseActivity) getActivity();
                         ba.displayConnectingMessage(service.getName());
                     }
@@ -122,13 +122,13 @@ public class ServiceListFragment extends DialogFragment {
 
             if (MultiscreenManager.getInstance().isTVConnected()) {
 
-                //Hide connect to layout.
+                // Hide connect to layout.
                 connectToLayout.setVisibility(View.GONE);
 
-                //Display connected device and disconnect button.
+                // Display connected device and disconnect button.
                 selectedServiceLayout.setVisibility(View.VISIBLE);
 
-                //Update the service icon according to service type.
+                // Update the service icon according to service type.
                 ImageView selectedServiceIcon = (ImageView) view.findViewById(R.id.selectedServiceIcon);
                 if (MultiscreenManager.getInstance().getConnectedServiceType() == MultiscreenManager.ServiceType.Speaker) {
                     //The speaker is connected
@@ -138,14 +138,14 @@ public class ServiceListFragment extends DialogFragment {
                     selectedServiceIcon.setImageResource(R.drawable.ic_tv_white);
                 }
 
-                //Display the connected service name
+                // Display the connected service name
                 TextView selectedServiceText = (TextView) view.findViewById(R.id.selectedServiceText);
                 selectedServiceText.setText(Util.getFriendlyTvName(MultiscreenManager.getInstance().getConnectedService().getName()));
 
-                //Button btnDisconnect = (Button) view.findViewById(R.id.disconnectButton);
+                // Button btnDisconnect = (Button) view.findViewById(R.id.disconnectButton);
                 TextView btnDisconnect = (TextView) view.findViewById(R.id.disconnectButton);
 
-                //When disconnect button is clicked, close the activity and returns to connection screen.
+                // When disconnect button is clicked, close the activity and returns to connection screen.
                 btnDisconnect.setOnClickListener(new View.OnClickListener() {
 
                     @Override
@@ -157,15 +157,15 @@ public class ServiceListFragment extends DialogFragment {
                 });
 
             } else {
-                //Hide connected device and disconnect button.
+                // Hide connected device and disconnect button.
                 selectedServiceLayout.setVisibility(View.GONE);
 
-                //Show connect to layout.
+                // Show connect to layout.
                 connectToLayout.setVisibility(View.VISIBLE);
             }
         }
 
-        //Create a alert dialog with customized style.
+        // Create a alert dialog with customized style.
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomTheme_Dialog);
         builder.setView(view);
 
@@ -188,7 +188,6 @@ public class ServiceListFragment extends DialogFragment {
             int displayHeight = Util.getDisplayHeight(getActivity());
             int maxHeight = Math.round((float) displayHeight * 75 / 100);
             lp.y = Math.round((float) (displayHeight - maxHeight) / 2);
-            //lp.height = maxHeight;
         }
 
         dialog.getWindow().setAttributes(lp);

@@ -22,8 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
+            android:layout_marginRight="10dp"
             android:scaleType="center"
             android:src="@drawable/ic_discovered_white" />
 
@@ -73,16 +72,15 @@
         <com.andexert.library.RippleView
             android:id="@+id/buttonRippleJoin"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:padding="16dp"
             app:rv_color="@color/gray">
 
             <TextView
                 android:id="@+id/join"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="@string/join"
                 android:textColor="@color/service_list_item"
@@ -99,16 +97,15 @@
         <com.andexert.library.RippleView
             android:id="@+id/buttonRippleOverwrite"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
-            android:padding="16dp"
             app:rv_color="@color/gray">
 
             <TextView
                 android:id="@+id/orverwrite"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:gravity="center"
                 android:text="@string/overwrite"
                 android:textColor="@color/service_list_item"

@@ -63,11 +63,11 @@ public class MultiscreenManager {
     public static final String CHANNEL_ID = "com.samsung.trailmix";
 
     public enum ServiceType {
-        //Other unknown type
+        // Other unknown type
         Other,
-        //Samsung smart TV.
+        // Samsung smart TV.
         TV,
-        //Samsung smart speaker.
+        // Samsung smart speaker.
         Speaker
     }
 
@@ -168,7 +168,7 @@ public class MultiscreenManager {
     }
 
     private MultiscreenManager() {
-        //Register Wifi state listener.
+        // Register Wifi state listener.
         registerWiFiStateListener();
     }
 
@@ -176,13 +176,13 @@ public class MultiscreenManager {
      * Clean up the service.
      */
     public void release() {
-        //Unregister the WiFi state listener.
+        // Unregister the WiFi state listener.
         try {
             App.getInstance().unregisterReceiver(mWifiStateChangedReceiver);
         } catch (Exception e) {//ignore if there is error.
         }
 
-        //Disconnect TV if it is connected.
+        // Disconnect TV if it is connected.
         disconnect();
 
         service = null;
@@ -211,21 +211,21 @@ public class MultiscreenManager {
     public void startDiscovery() {
         Util.d("startDiscovery");
 
-        //Create the search object if it is null.
+        // Create the search object if it is null.
         if (search == null) {
             search = Service.search(App.getInstance());
             search.setOnServiceFoundListener(mOnServiceFoundListener);
             search.setOnServiceLostListener(mOnServiceLostListener);
         }
 
-        //When WiFi is connected and search process is not running.
+        // When WiFi is connected and search process is not running.
         if (Util.isWiFiConnected() && !isDiscovering()) {
 
             if (!search.isStarting()) {
-                //Clear the TV list.
+                // Clear the TV list.
                 removeAllServices();
 
-                //Start discovery.
+                // Start discovery.
                 search.start();
             }
         }
@@ -238,7 +238,7 @@ public class MultiscreenManager {
     public void stopDiscovery() {
         Util.d("stopDiscovery");
 
-        //Stop discovery if search object it not null and it is search.
+        // Stop discovery if search object it not null and it is search.
         if (isDiscovering()) {
             if (!search.isStopping()) {
                 try {
@@ -260,7 +260,7 @@ public class MultiscreenManager {
         }
 
         if (isDiscovering()) {
-            //Set the listener. Called when search is completely stopped.
+            // Set the listener. Called when search is completely stopped.
             setDiscoveryOnStopListener(new Search.OnStopListener() {
                 @Override
                 public void onStop() {
@@ -273,10 +273,10 @@ public class MultiscreenManager {
                 }
             });
 
-            //Start to stop discovery.
+            // Start to stop discovery.
             stopDiscovery();
         } else {
-            //There is no search process, start a new discovery.
+            // There is no search process, start a new discovery.
             startDiscovery();
         }
     }
@@ -286,14 +286,14 @@ public class MultiscreenManager {
         public void onFound(Service service) {
             Util.d("Service onFound: " + service);
 
-            //TV is found, update the service list.
+            // TV is found, update the service list.
             updateService(service);
         }
     };
     private Search.OnServiceLostListener mOnServiceLostListener = new Search.OnServiceLostListener() {
         @Override
         public void onLost(Service service) {
-            //Remove the TV from TV list.
+            // Remove the TV from TV list.
             removeService(service);
         }
     };
@@ -311,7 +311,7 @@ public class MultiscreenManager {
     public void removeAllServices() {
         serviceList.clear();
 
-        //Notify UI to update cast icon.
+        // Notify UI to update cast icon.
         EventBus.getDefault().post(new ServiceChangedEvent(null, false));
     }
 
@@ -324,14 +324,14 @@ public class MultiscreenManager {
             return;
         }
 
-        //Get the service position.
+        // Get the service position.
         int position = serviceList.indexOf(service);
 
-        //Check if position is valid.
+        // Check if position is valid.
         if (position >= 0) {
             serviceList.set(position, service);
 
-            //Notify new service is added.
+            // Notify new service is added.
             EventBus.getDefault().post(new ServiceChangedEvent(service, true));
         } else {
             addService(service);
@@ -349,7 +349,7 @@ public class MultiscreenManager {
 
         serviceList.add(service);
 
-        //Notify new service is added.
+        // Notify new service is added.
         EventBus.getDefault().post(new ServiceChangedEvent(service, true));
     }
 
@@ -364,10 +364,10 @@ public class MultiscreenManager {
             return;
         }
 
-        //Remove the service if it exists.
+        // Remove the service if it exists.
         if (serviceList.remove(service)) {
 
-            //Notify new service is added.
+            // Notify new service is added.
             EventBus.getDefault().post(new ServiceChangedEvent(service, true));
         }
     }
@@ -385,31 +385,31 @@ public class MultiscreenManager {
 
         if (this.service != null) {
 
-            //Launch the TV App directly if we already got the TV service.
+            // Launch the TV App directly if we already got the TV service.
             if (this.service.equals(service)) {
 
-                //Launch the TV app if it is not connected, otherwise do nothing.
+                // Launch the TV app if it is not connected, otherwise do nothing.
                 if (!multiscreenApp.isConnected()) {
                     launchApplication();
                 }
 
             } else {
 
-                //If different TV is selected, disconnect the previous application.
+                // If different TV is selected, disconnect the previous application.
                 if (multiscreenApp != null && multiscreenApp.isConnected()) {
                     multiscreenApp.disconnect(new Result<Client>() {
                         @Override
                         public void onSuccess(Client client) {
-                            //disconnect onSuccess, update service.
+                            // disconnect onSuccess, update service.
                             updateServiceAndConnect(service);
                         }
 
                         @Override
                         public void onError(com.samsung.multiscreen.Error error) {
-                            //disconnect failed.
+                            // disconnect failed.
                             Util.e("disconnect onError: " + error.getMessage());
 
-                            //Update service.
+                            // Update service.
                             updateServiceAndConnect(service);
                         }
                     });
@@ -486,23 +486,23 @@ public class MultiscreenManager {
             return;
         }
 
-        //Parse Application Url.
+        // Parse Application Url.
         Uri url = Uri.parse(APP_URL);
 
         // Get an instance of Application.
         multiscreenApp = service.createApplication(url, CHANNEL_ID);
 
-        //Set the connection timeout to 20 seconds.
-        //When the TV is unavailable after 20 seconds, onDisconnect event is called.
+        // Set the connection timeout to 20 seconds.
+        // When the TV is unavailable after 20 seconds, onDisconnect event is called.
         multiscreenApp.setConnectionTimeout(20000);
 
-        //Listen for the disconnect event.
+        // Listen for the disconnect event.
         multiscreenApp.setOnDisconnectListener(new Channel.OnDisconnectListener() {
             @Override
             public void onDisconnect(Client client) {
                 if (client != null) {
 
-                    //Notify service change listeners.
+                    // Notify service change listeners.
                     EventBus.getDefault().post(new ConnectionChangedEvent(null));
                 }
             }
@@ -513,7 +513,7 @@ public class MultiscreenManager {
             @Override
             public void onConnect(Client client) {
 
-                //Notify to update UI.
+                // Notify to update UI.
                 EventBus.getDefault().post(new ConnectionChangedEvent(null));
             }
         });
@@ -527,14 +527,14 @@ public class MultiscreenManager {
             }
         });
 
-        //Add message listeners.
+        // Add message listeners.
         multiscreenApp.addOnMessageListener(EVENT_APP_STATE, onAppStateListener);
         multiscreenApp.addOnMessageListener(EVENT_VIDEO_STATUS, onVideoStatusListener);
         multiscreenApp.addOnMessageListener(EVENT_VIDEO_START, onVideoStartListener);
         multiscreenApp.addOnMessageListener(EVENT_VIDEO_END, onVideoEndListener);
 
-        //Connect and launch the TV application.
-        //The timeout is 30 seconds.
+        // Connect and launch the TV application.
+        // The timeout is 30 seconds.
         multiscreenApp.connect(null, 30000, new Result<Client>() {
 
             @Override
@@ -545,7 +545,7 @@ public class MultiscreenManager {
             public void onError(com.samsung.multiscreen.Error error) {
                 Util.e("connect onError: " + error.toString());
 
-                //failed to launch TV application. Notify TV service changes.
+                // failed to launch TV application. Notify TV service changes.
                 EventBus.getDefault().post(new ConnectionChangedEvent(error.getMessage()));
             }
         });
@@ -707,8 +707,6 @@ public class MultiscreenManager {
     private Channel.OnMessageListener onVideoStartListener = new Channel.OnMessageListener() {
         @Override
         public void onMessage(Message message) {
-            //Util.d("onVideoStartListener: " + message.toString());
-
             if (message != null && message.getData() != null) {
                 EventBus.getDefault().post(new PlaybackEvent(message.getData().toString(),
                         message.getEvent()));
@@ -770,18 +768,18 @@ public class MultiscreenManager {
                 switch (extraWifiState) {
                     case WifiManager.WIFI_STATE_DISABLED:
                     case WifiManager.WIFI_STATE_DISABLING:
-                        //WiFi is not available.
+                        // WiFi is not available.
                         stopDiscovery();
 
-                        //Clear the TV list.
+                        // Clear the TV list.
                         removeAllServices();
                         break;
                     case WifiManager.WIFI_STATE_ENABLED:
-                        //Use ConnectivityManager.CONNECTIVITY_ACTION instead.
+                        // Use ConnectivityManager.CONNECTIVITY_ACTION instead.
                         break;
                 }
             } else if (android.net.ConnectivityManager.CONNECTIVITY_ACTION.equals(intent.getAction())) {
-                //WiFi is connected
+                // WiFi is connected
                 if (Util.isWiFiConnected()) {
                     startDiscovery();
                 }

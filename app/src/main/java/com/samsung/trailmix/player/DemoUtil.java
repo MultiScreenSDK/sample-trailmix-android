@@ -117,7 +117,7 @@ public class DemoUtil {
                 String ts = TYPE_STRING[i];
                 if (ts.equalsIgnoreCase(typeStr)) {
 
-                    //find the match type, get the type value.
+                    // find the match type, get the type value.
                     type = i;
                     break;
                 }

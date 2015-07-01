@@ -38,22 +38,22 @@ public class CurrentStatus extends Base {
      */
     public static final String STATE_PAUSED = "paused";
 
-    //video id
+    // Video id
     private String id;
 
-    //The playback position
+    // The playback position
     private float time;
 
-    //The current playback state either STATE_PLAYING or STATE_PAUSED
+    // The current playback state either STATE_PLAYING or STATE_PAUSED
     private String state;
 
-    //The duration of the video.
+    // The duration of the video.
     private long duration;
 
-    //The video title.
+    // The video title.
     private String title;
 
-    //The volume value.
+    // The volume value.
     private int volume;
 
 

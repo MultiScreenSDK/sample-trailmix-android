@@ -30,10 +30,10 @@ import com.samsung.trailmix.multiscreen.MultiscreenManager;
  * The track playback state event such as playing or paused.
  */
 public class PlaybackEvent {
-    //The track id.
+    // The track id.
     public String id;
 
-    //The event of the track.
+    // The event of the track.
     public String event;
 
     public PlaybackEvent(String id, String event) {

@@ -50,7 +50,11 @@ public class JoinOverwriteFragment extends DialogFragment {
 
         // Supply type input as an argument.
         Bundle args = new Bundle();
-        args.putString("name", tvName + "\nis playing");
+        if (tvName.length()>10) {
+            args.putString("name", tvName + "\nis playing");
+        }else {
+            args.putString("name", tvName + " is playing");
+        }
         args.putString("title", title);
         args.putString("metadata", metadata);
         f.setArguments(args);
@@ -62,13 +66,13 @@ public class JoinOverwriteFragment extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //Read TV name
+        // Read TV name
         tvName = getArguments().getString("name");
 
-        //Read movie title.
+        // Read movie title.
         title = getArguments().getString("title");
 
-        //Read metadata
+        // Read metadata
         metadata = getArguments().getString("metadata");
 
     }

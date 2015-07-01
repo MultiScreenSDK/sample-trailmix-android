@@ -324,16 +324,6 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             metaData.setCover("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.png");
             metaData.setType("mp4");
             metaData.setFile("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.mp4");
-
-//            metaData.setType("dash");
-//            metaData.setFile("http://www.youtube.com/api/manifest/dash/id/3aa39fa2cc27967f/source/youtube?"
-//                    + "as=fmp4_audio_clear,fmp4_sd_hd_clear&sparams=ip,ipbits,expire,source,id,as&ip=0.0.0.0&"
-//                    + "ipbits=0&expire=19000000000&signature=A2716F75795F5D2AF0E88962FFCD10DB79384F29."
-//                    + "84308FF04844498CE6FBCE4731507882B8307798&key=ik0");
-
-
-            //metaData.setType(DemoUtil.TYPE_HLS);
-            //metaData.setFile("https://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/bipbop_16x9_variant.m3u8");
         }
 
         if (currentStatus == null) {
@@ -344,12 +334,6 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
     }
 
-//    /**
-//     * Update movie title.
-//     */
-//    private void updateUI() {
-//
-//    }
 
     /**
      * Get the renderer builder according to the type of media.
@@ -428,7 +412,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             playControlImageView.setState(PlayControlImageView.State.pause);
         } else {
 
-            //Play video when there is no current statua or it is playing state.
+            // Play video when there is no current statua or it is playing state.
             player.setPlayWhenReady(true);
 
             // update the play control button
@@ -658,10 +642,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
 
                 updateDuration();
 
-                //Show the panels when video is started.
+                // Show the panels when video is started.
                 showPanels(View.VISIBLE);
 
-                //Update seek bar.
+                // Update seek bar.
                 handler.postDelayed(updateMediaPosition, 1000);
 
                 break;
@@ -761,8 +745,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     //      Multiscreen events and functions
     //==============================================================================================
 
-
-    // This method will be called when a app state event is received.
+    /**
+     * This method will be called when a app state event is received.
+      * @param event
+     */
     public void onEvent(AppStateEvent event) {
         com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
 

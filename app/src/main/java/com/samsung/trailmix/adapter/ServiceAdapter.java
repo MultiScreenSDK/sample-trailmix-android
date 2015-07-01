@@ -45,22 +45,22 @@ import de.greenrobot.event.EventBus;
 
 public class ServiceAdapter extends BaseAdapter {
 
-    //The layout resource id.
+    // The layout resource id.
     private static final int layoutResourceId = R.layout.service_list_item;
     private static LayoutInflater inflater = null;
     private Context context;
 
-    //The service list.
+    // The service list.
     ArrayList<Service> serviceList = null;
 
     public ServiceAdapter(Context context, ArrayList<Service> serviceList) {
         this.context = context;
         inflater = LayoutInflater.from(this.context);
 
-        //Use the service list given in the parameters.
+        // Use the service list given in the parameters.
         this.serviceList = serviceList;
 
-        //Register to receive events.
+        // Register to receive events.
         EventBus.getDefault().register(this);
     }
 
@@ -74,7 +74,7 @@ public class ServiceAdapter extends BaseAdapter {
     public void release() {
         serviceList = null;
 
-        //Unregister the events.
+        // Unregister the events.
         EventBus.getDefault().unregister(this);
     }
 
@@ -102,7 +102,7 @@ public class ServiceAdapter extends BaseAdapter {
      * This method will be service is changed (add/remove/update).
      */
     public void onEvent(ServiceChangedEvent event) {
-        //Run it at UI thread.
+        // Run it at UI thread.
         new Handler().post(new Runnable() {
             @Override
             public void run() {
@@ -128,10 +128,10 @@ public class ServiceAdapter extends BaseAdapter {
 
         final Service service = getItem(position);
 
-        //Set the service name.
+        // Set the service name.
         holder.deviceName.setText(Util.getFriendlyTvName(service.getName()));
 
-        //Set the service icon according to the service type.
+        // Set the service icon according to the service type.
         if (MultiscreenManager.getInstance().getServiceType(service) == MultiscreenManager.ServiceType.Speaker) {
             holder.serviceIcon.setImageResource(R.drawable.ic_speaker_gray);
         } else {

@@ -41,7 +41,7 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
     private static LayoutInflater inflater = null;
     private Context context;
 
-    //now playing id
+    // now playing id
     private String nowPlayingId;
 
     public LibraryAdapter(Context context, int resourceId) {
@@ -62,16 +62,16 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
      */
     public void replace(MetaData metaData) {
 
-        //Get the service position.
+        // Get the service position.
         int position = getPosition(metaData);
 
-        //Check if position is valid.
+        // Check if position is valid.
         if (position >= 0) {
 
-            //Remove the existing service.
+            // Remove the existing service.
             remove(metaData);
 
-            //Insert the new service at the same position.
+            // Insert the new service at the same position.
             insert(metaData, position);
         }
     }

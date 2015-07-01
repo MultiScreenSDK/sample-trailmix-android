@@ -1,3 +1,26 @@
+/**
+ * ****************************************************************************
+ * Copyright (c) 2015 Samsung Electronics
+ * <p/>
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * <p/>
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * <p/>
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * *****************************************************************************
+ */
 
 
 package com.samsung.trailmix.ui;
@@ -166,7 +189,7 @@ public class MainActivity extends BaseActivity {
 
         Util.d("onResume,  isDiscovering=" + mMultiscreenManager.isDiscovering());
 
-        //dismiss any dialog.
+        // Dismiss any dialog.
         cancelToast();
 
         // Update the UI.
@@ -326,7 +349,9 @@ public class MainActivity extends BaseActivity {
         return null;
     }
 
-    // Set up the playback panel.
+    /**
+     * Set up the playback panel.
+     */
     private void setupPlaybackPanel() {
         // Playback control panel.
         playControlLayout = (LinearLayout) findViewById(R.id.playControlLayout);
@@ -413,7 +438,6 @@ public class MainActivity extends BaseActivity {
             currentStatus.setId(id);
             currentStatus.setState(CurrentStatus.STATE_PLAYING);
             currentStatus.setDuration(metaData.getDuration());
-//            currentStatus.setTime(Settings.instance.readPlaybackPosition(id));
         }
 
         Intent intent = new Intent(MainActivity.this, VideoActivity.class);
@@ -528,10 +552,9 @@ public class MainActivity extends BaseActivity {
         Util.d("play() is called, metadata=" + metaData);
         if (metaData != null) {
 
-//            float position = Settings.instance.readPlaybackPosition(metaData.getId());
             mMultiscreenManager.play(metaData);
 
-            //Reset the progressbar.
+            // Reset the progressbar.
             seekBar.setProgress(0);
             seekBar.setMax(metaData.getDuration());
         }
@@ -609,7 +632,7 @@ public class MainActivity extends BaseActivity {
         PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(this, 0, switchIntent, 0);
         notificationView.setOnClickPendingIntent(R.id.playControl, pendingSwitchIntent);
 
-        //Use customized layout.
+        // Use customized layout.
         n.contentView = notificationView;
 
         return n;
@@ -655,9 +678,6 @@ public class MainActivity extends BaseActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            Util.d("intent action = " + action);
-
             handleOnPlayControlButtonClick();
         }
     }
