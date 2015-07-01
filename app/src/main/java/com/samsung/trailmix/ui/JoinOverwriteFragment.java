@@ -130,7 +130,7 @@ public class JoinOverwriteFragment extends DialogFragment {
             message.setText(title);
         }
 
-        //Create a alert dialog with customized style.
+        // Create a alert dialog with customized style.
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.CustomTheme_Dialog);
 
         // Apply the view.

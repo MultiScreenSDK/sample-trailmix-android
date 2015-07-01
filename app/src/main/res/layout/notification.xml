@@ -23,8 +23,7 @@
             android:id="@+id/coverImage"
             android:layout_width="100dp"
             android:layout_height="wrap_content"
-            android:scaleType="centerCrop"
-            android:src="@drawable/appicon_test"/>
+            android:scaleType="centerCrop" />
 
         <TextView
             android:id="@+id/content"
