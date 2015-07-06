@@ -25,7 +25,7 @@
         android:alpha="0.6"
         android:background="#000000"
         android:scaleType="center"
-        android:src="@drawable/ic_connected_white"
+        android:src="@drawable/img_currentplay"
         android:visibility="gone"/>
 
     <TextView

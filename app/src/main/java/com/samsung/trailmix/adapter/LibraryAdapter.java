@@ -121,7 +121,7 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
             Picasso.with(context).load(Util.getUriFromUrl(cover)).into(holder.trailerArt);
         }
 
-        // Update the play control button.
+        // Update the now playing indicator.
         if (nowPlayingId == null) {
             holder.nowPlayingIndicator.setVisibility(View.GONE);
         } else {
