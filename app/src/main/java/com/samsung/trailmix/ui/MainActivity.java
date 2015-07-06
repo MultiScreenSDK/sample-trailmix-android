@@ -107,6 +107,9 @@ public class MainActivity extends BaseActivity {
     // The broadcast listener to receive play action from notification.
     PlayActionBroadcastReceiver broadcastReceiver;
 
+    //==============================================================================================
+    //      Activity methods
+    //==============================================================================================
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -227,10 +230,10 @@ public class MainActivity extends BaseActivity {
         updateUI();
     }
 
-    public void overwritePlaying(String metatdata) {
-        metaData = MetaData.parse(metatdata,MetaData.class);
-        mMultiscreenManager.play(metaData);
-    }
+    //==============================================================================================
+    //      Multiscreen events and methods
+    //==============================================================================================
+
 
     // This method will be called when a app state event is received.
     public void onEvent(AppStateEvent event) {
@@ -311,6 +314,25 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+
+    /**
+     * Play a new video and overwrite the currently video.
+     * The video will be started at given position.
+     */
+    public void overwritePlaying(String metatdata) {
+        metaData = MetaData.parse(metatdata,MetaData.class);
+        mMultiscreenManager.play(metaData);
+    }
+
+
+    //==============================================================================================
+    //      Internal methods.
+    //==============================================================================================
+
+
+    /**
+     * Handle the service disconnection event.
+     */
     private void handleDisconnect() {
         Util.d("TV is disconnected.");
 
@@ -560,6 +582,9 @@ public class MainActivity extends BaseActivity {
         }
     }
 
+    /**
+     * Show notification.
+     */
     private void showNotification() {
         Notification notification = getNotification(metaData);
         if (notification != null) {
@@ -573,6 +598,9 @@ public class MainActivity extends BaseActivity {
         registerBroadcastListener();
     }
 
+    /**
+     * Remove notification.
+     */
     private void clearNotification() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(NOTIFICATION_ID);
@@ -580,6 +608,11 @@ public class MainActivity extends BaseActivity {
         unregisterBroadcastListener();
     }
 
+    /**
+     * Create notification and set its state.
+     * @param metaData
+     * @return
+     */
     private Notification getNotification(MetaData metaData) {
         if (metaData == null) {
             return null;
@@ -661,6 +694,9 @@ public class MainActivity extends BaseActivity {
         registerReceiver(broadcastReceiver, intentFilter);
     }
 
+    /**
+     * Unregister broadcast receiver.
+     */
     private void unregisterBroadcastListener() {
         if (broadcastReceiver != null) {
             try {
@@ -671,6 +707,9 @@ public class MainActivity extends BaseActivity {
         broadcastReceiver = null;
     }
 
+    /**
+     * The broadcast receiver to receive the play button actions from notification.
+     */
     public class PlayActionBroadcastReceiver extends BroadcastReceiver {
         public static final String ACTION_PLAY = "com.samsung.trailmix.ACTION_PLAY";
         public static final String ACTION_PAUSE = "com.samsung.trailmix.ACTION_PAUSE";

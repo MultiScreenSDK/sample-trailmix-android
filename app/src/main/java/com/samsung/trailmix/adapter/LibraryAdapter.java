@@ -111,14 +111,17 @@ public class LibraryAdapter extends ArrayAdapter<MetaData> {
 
         final ViewHolder holder = (ViewHolder) row.getTag();
 
+        // Set the video name.
         final MetaData md = getItem(position);
         holder.trailerText.setText(md.getTitle());
 
+        // Load cover image.
         String cover = md.getCover();
         if (cover != null) {
             Picasso.with(context).load(Util.getUriFromUrl(cover)).into(holder.trailerArt);
         }
 
+        // Update the play control button.
         if (nowPlayingId == null) {
             holder.nowPlayingIndicator.setVisibility(View.GONE);
         } else {

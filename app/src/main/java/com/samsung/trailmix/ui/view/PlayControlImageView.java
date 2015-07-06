@@ -31,11 +31,14 @@ import android.widget.ImageView;
 import com.samsung.trailmix.R;
 
 public class PlayControlImageView extends ImageView {
+    // Button state.
     public enum State {
         play, pause, retry
     }
 
     private State state = null;
+
+    //Use smaller set of icons when it is true.
     private boolean useSmallIcon = false;
 
     public PlayControlImageView(Context context, AttributeSet attrs) {
@@ -44,6 +47,10 @@ public class PlayControlImageView extends ImageView {
     }
 
 
+    /**
+     * Set the button state and update the button image.
+     * @param state
+     */
     public void setState(State state) {
         if (this.state != state) {
             this.state = state;
@@ -51,10 +58,17 @@ public class PlayControlImageView extends ImageView {
         }
     }
 
+    /**
+     * Get current state.
+     * @return
+     */
     public State getState() {
         return state;
     }
 
+    /**
+     * Update the image resource according to state.
+     */
     public void updateImageRes() {
         switch (state) {
             case play:
@@ -69,6 +83,10 @@ public class PlayControlImageView extends ImageView {
         }
     }
 
+    /**
+     * Set whether or not to use smaller set icon.
+     * @param useSmallIcon use smaller icons when it is true, otherwise normal icons.
+     */
     public void setUseSmallIcon(boolean useSmallIcon) {
         this.useSmallIcon = useSmallIcon;
         updateImageRes();

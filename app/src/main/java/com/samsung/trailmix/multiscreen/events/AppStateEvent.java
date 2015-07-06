@@ -30,6 +30,9 @@ import com.samsung.trailmix.multiscreen.model.CurrentStatus;
  * AppState event sent when app state update is received.
  */
 public class AppStateEvent {
+    /**
+     * Current playback status.
+     */
     public CurrentStatus status;
 
     public AppStateEvent(CurrentStatus status) {

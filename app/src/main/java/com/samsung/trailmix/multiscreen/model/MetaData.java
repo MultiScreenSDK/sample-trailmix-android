@@ -34,13 +34,29 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class MetaData extends Base implements Cloneable {
+
+    // Video id
     private String id;
+
+    // The video title.
     private String title;
+
+    // Video file location url.
     private String file;
+
+    // Video cover image url.
     private String cover;
+
+    // The year of the video.
     private String year;
+
+    // Cast information.
     private String cast;
+
+    // The duration of the video.
     private int duration;
+
+    // Video file formation such as mp4, dash, etc.
     private String type;
 
 

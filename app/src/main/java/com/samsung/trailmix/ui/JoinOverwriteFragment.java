@@ -36,9 +36,13 @@ import android.widget.TextView;
 import com.samsung.trailmix.R;
 
 public class JoinOverwriteFragment extends DialogFragment {
+    // The TV name.
     private String tvName;
+
+    //The title of dialog.
     private String title;
 
+    //The meta data of the video.
     private String metadata;
 
     /**

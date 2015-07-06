@@ -117,7 +117,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     // The cover screen of the movie displayed when the video is finished.
     private ImageView cover;
 
-    //---------------------------- Activity methods------------------------------------------------
+    //==============================================================================================
+    //      Activity methods
+    //==============================================================================================
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -259,9 +261,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         releasePlayer();
     }
 
-
-
-    //---------------------------- Internal methods------------------------------------------------
+    //==============================================================================================
+    //      Internal methods
+    //==============================================================================================
 
     /**
      * Update the media playback position every second.
@@ -552,8 +554,11 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     };
 
 
-    // OnClickListener methods
+    //==============================================================================================
+    //      Listener implementations
+    //==============================================================================================
 
+    // OnClickListener methods
     @Override
     public void onClick(View view) {
         com.samsung.trailmix.util.Util.d("onClick");
@@ -721,7 +726,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
     }
 
-    // SurfaceHolder.Callback implementation
+    //==============================================================================================
+    //      SurfaceHolder.Callback implementation
+    //==============================================================================================
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
@@ -770,6 +777,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
     }
 
+    /**
+     * Play a new video and overwrite the currently video.
+     * The video will be started at given position.
+     */
     public void overwritePlaying() {
         mMultiscreenManager.play(metaData, (int)currentStatus.getTime());
     }

@@ -41,6 +41,10 @@ public class PlaybackEvent {
         this.event = event;
     }
 
+    /**
+     * Check if the video is playing.
+     * @return true if video is playing otherwise false.
+     */
     public boolean isStart() {
         return (event != null && event.equals(MultiscreenManager.EVENT_VIDEO_START));
     }
