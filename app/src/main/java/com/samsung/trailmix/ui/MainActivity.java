@@ -518,8 +518,8 @@ public class MainActivity extends BaseActivity {
         }
 
         // Update the connected service name or app name.
-        appText.setText(mMultiscreenManager.isTVConnected() ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
-        iconImageView.setVisibility(mMultiscreenManager.isTVConnected() ? View.VISIBLE : View.GONE);
+        appText.setText(isPlayingOnTV ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
+        iconImageView.setVisibility(isPlayingOnTV ? View.VISIBLE : View.GONE);
 
         // Update toolbar background color
         toolbar.setBackgroundColor(isPlayingOnTV ? getResources().getColor(R.color.black) : getResources().getColor(R.color.toolbar_background_color));

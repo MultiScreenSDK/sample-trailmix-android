@@ -159,7 +159,7 @@ public class BaseActivity extends AppCompatActivity {
 
     // This method will be called when a MessageEvent is posted
     public void onEvent(ConnectionChangedEvent event) {
-        Util.d("BaseActivity ConnectionChangedEvent: " + event.toString());
+        Util.d("BaseActivity ConnectionChangedEvent, connected = " + mMultiscreenManager.isTVConnected());
 
         if (mMultiscreenManager.isTVConnected()) {
 
@@ -170,7 +170,9 @@ public class BaseActivity extends AppCompatActivity {
             mMultiscreenManager.stopDiscovery();
 
             //Send app state request when TV is connected.
-            mMultiscreenManager.requestAppState();
+            if (this instanceof MainActivity) {
+                mMultiscreenManager.requestAppState();
+            }
 
             //If it is video screen, exit to main screen.
 //            if (this instanceof VideoActivity) {

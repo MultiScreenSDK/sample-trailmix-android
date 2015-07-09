@@ -27,7 +27,9 @@ package com.samsung.trailmix.ui;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.DialogFragment;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
@@ -146,6 +148,19 @@ public class JoinOverwriteFragment extends DialogFragment {
 
         // Create alert dialog
         AlertDialog dialog = builder.create();
+
+        // Ignore the back key. User has to make a choice.
+        dialog.setOnKeyListener(new Dialog.OnKeyListener() {
+
+            @Override
+            public boolean onKey(DialogInterface arg0, int keyCode,
+                                 KeyEvent event) {
+                if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    return true;
+                }
+                return false;
+            }
+        });
 
         // Note allow dismiss by clicking outside the dialog
         dialog.setCanceledOnTouchOutside(false);

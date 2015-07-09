@@ -282,6 +282,12 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     };
 
     private void updateMediaPosition(int position) {
+        // Ignore the wrong position when error happens.
+        if (position>seekBar.getMax()) {
+            com.samsung.trailmix.util.Util.d("updateMediaPosition ignore wrong position at: " + position);
+            return;
+        }
+
         seekBar.setProgress((int) position);
         postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
         currentStatus.setTime(position/1000);
@@ -772,15 +778,36 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      */
     public void onEvent(AppStateEvent event) {
         com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
+        com.samsung.trailmix.util.Util.d("VideoActivity  currentStatus: " + currentStatus);
 
-        currentStatus = event.status;
-        String currentPlayingId = currentStatus.getId();
+
+        String currentPlayingId = event.status.getId();
+
+
 
         if (currentPlayingId != null) {
 
-            // Display join/overwrite dialog.
-            String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
-            showJoinOverwritetDialog(name, currentStatus.getTitle(), metaData.toJsonString());
+            // Check if the same video is playing.
+            if (!currentPlayingId.equals(currentStatus.getId())) {
+
+                // Display join/overwrite dialog.
+                String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
+                showJoinOverwritetDialog(name, currentStatus.getTitle(), metaData.toJsonString());
+            } else {
+
+                //Same video, check if played at same position.
+                if (event.status.getTime() == currentStatus.getTime()) {
+                    //Played at same position, just join the video automatically.
+                    finish();
+                } else {
+
+                    //Played at different position.
+                    // Display join/overwrite dialog.
+                    String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
+                    showJoinOverwritetDialog(name, currentStatus.getTitle(), metaData.toJsonString());
+                }
+
+            }
         } else {
 
             // Nothing is played, play current video.
@@ -789,6 +816,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             // Exit the local player.
             finish();
         }
+
+        currentStatus = event.status;
     }
 
     /**
