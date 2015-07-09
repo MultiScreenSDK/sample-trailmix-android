@@ -188,13 +188,13 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             public void onStopTrackingTouch(SeekBar seekBar) {
                 if (player != null) {
 
+                    seekTo(seekBar.getProgress());
+
                     // When in retry mode and seekbar is pressed, automatically play from the position.
                     if (playControlImageView.getState() == PlayControlImageView.State.retry) {
                         cover.setVisibility(View.GONE);
-                        playControlImageView.setState(PlayControlImageView.State.play);
+                        play();
                     }
-
-                    seekTo(seekBar.getProgress());
                 }
             }
         });
@@ -449,6 +449,22 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     }
 
     /**
+     * Play the video and update play control button state.
+     */
+    private void play() {
+        player.getPlayerControl().start();
+        playControlImageView.setState(PlayControlImageView.State.play);
+    }
+
+    /**
+     * Pause the video and update play control button state.
+     */
+    private void pause() {
+        player.getPlayerControl().pause();
+        playControlImageView.setState(PlayControlImageView.State.pause);
+    }
+
+    /**
      * Update the video duration on UI.
      */
     private void updateDuration() {
@@ -538,8 +554,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         // Cancel the previous auto hide task.
         handler.removeCallbacks(hidePanelThread);
 
-        // When panels are displaying, we will auto hide them after certain seconds.
-        if (toolbar.getVisibility() == View.VISIBLE) {
+        // When panels are displaying and it is in play state, we will auto hide them after certain seconds.
+        if (toolbar.getVisibility() == View.VISIBLE && playControlImageView.getState()== PlayControlImageView.State.play) {
             handler.postDelayed(hidePanelThread, 3000);
         }
     }
@@ -575,11 +591,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 releasePlayer();
                 preparePlayer();
             } else if (state == PlayControlImageView.State.pause) {
-                player.getPlayerControl().start();
-                playControlImageView.setState(PlayControlImageView.State.play);
+                play();
             } else {
-                player.getPlayerControl().pause();
-                playControlImageView.setState(PlayControlImageView.State.pause);
+                pause();
             }
 
             resetAutoHideTimer();
