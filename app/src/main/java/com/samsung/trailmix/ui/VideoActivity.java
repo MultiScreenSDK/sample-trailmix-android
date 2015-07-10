@@ -288,7 +288,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             return;
         }
 
-        seekBar.setProgress((int) position);
+        seekBar.setProgress(position);
         postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
         currentStatus.setTime(position/1000);
     }
@@ -594,6 +594,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 // Replay from beginning.
                 currentStatus.setTime(0);
 
+                // Start to play automatically.
+                currentStatus.setState(CurrentStatus.STATE_PLAYING);
+
                 releasePlayer();
                 preparePlayer();
             } else if (state == PlayControlImageView.State.pause) {
@@ -648,6 +651,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 // Display retry button
                 playControlImageView.setState(PlayControlImageView.State.retry);
                 showPanels(View.VISIBLE);
+
+                //Make sure the seek bar reaches the end.
+                updateMediaPosition(seekBar.getMax());
 
                 //Cancel media position update.
                 handler.removeCallbacks(updateMediaPosition);

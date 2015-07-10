@@ -273,7 +273,7 @@ public class MainActivity extends BaseActivity {
 
     // This method will be called when a app state event is received.
     public void onEvent(PlaybackEvent event) {
-        Util.d("MainActivity  PlaybackEvent: " + event.toString());
+        Util.d("MainActivity  PlaybackEvent: " + event.isStart());
 
         // Set play control button according to playback state.
         if (event.isStart()) {
@@ -290,6 +290,10 @@ public class MainActivity extends BaseActivity {
             //Show the retry button only when it is not switching video.
             if (!isSwitchingVideo) {
                 playControl.setState(PlayControlImageView.State.retry);
+
+                //Make sure the seek bar reaches the end.
+                updateMediaPosition(seekBar.getMax());
+
                 showNotification();
             }
         }
@@ -500,9 +504,10 @@ public class MainActivity extends BaseActivity {
                 seekBar.setMax(duration);
                 durationTextView.setText(Util.formatTimeString(duration * 1000));
 
-                int position = (int) currentStatus.getTime();
-                seekBar.setProgress(position);
-                postionTextView.setText(Util.formatTimeString(position * 1000));
+                updateMediaPosition((int) currentStatus.getTime());
+//                int position = (int) currentStatus.getTime();
+//                seekBar.setProgress(position);
+//                postionTextView.setText(Util.formatTimeString(position * 1000));
 
                 if (playControl.getState() != PlayControlImageView.State.retry) {
                     playControl.setState(currentStatus.isPlaying() ? PlayControlImageView.State.play : PlayControlImageView.State.pause);
@@ -528,6 +533,16 @@ public class MainActivity extends BaseActivity {
         libraryAdapter.setNowPlaying(isPlayingOnTV ? currentStatus.getId() : null);
     }
 
+    private void updateMediaPosition(int position) {
+        // Ignore the wrong position when error happens.
+        if (position>seekBar.getMax()) {
+            Util.d("updateMediaPosition ignore wrong position at: " + position);
+            return;
+        }
+
+        seekBar.setProgress(position);
+        postionTextView.setText(Util.formatTimeString(position*1000));
+    }
 
     /**
      * The background thread to load playlist from server.
