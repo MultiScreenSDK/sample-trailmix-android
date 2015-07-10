@@ -7,7 +7,7 @@
 
   <style name="_AppTheme" parent="android:Theme.Holo.Light">
 
-    <item name="android:seekBarStyle">@style/SeekBarAppTheme</item>
+    <item name="android:seekBarStyle">@style/SeekBarAppTheme2</item>
 
   </style>
 

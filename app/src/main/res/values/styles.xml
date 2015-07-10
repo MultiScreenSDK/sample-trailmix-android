@@ -22,4 +22,12 @@
         <item name="android:windowMinWidthMinor">@dimen/connect_width</item>
     </style>
 
+    <style name="CustomTheme.Dialog.Transparent" parent="CustomTheme.Dialog" />
+
+    <style name="SeekBarAppTheme" parent="android:Widget.Holo.Light.SeekBar">
+        <item name="android:progressDrawable">@drawable/scrubber_progress</item>
+        <item name="android:indeterminateDrawable">@drawable/scrubber_progress</item>
+        <item name="android:thumb">@drawable/scrubber_control_selector</item>
+    </style>
+
 </resources>

@@ -60,7 +60,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="horizontal"
-            android:paddingLeft="16dp"
+            android:paddingLeft="4dp"
             android:paddingRight="16dp"
             android:layout_marginTop="16dp">
 
@@ -81,7 +81,7 @@
                 android:gravity="center_vertical"
                 android:lineSpacingExtra="4dp"
                 android:maxLines="2"
-                android:paddingLeft="8dp"
+                android:paddingLeft="4dp"
                 android:scrollHorizontally="true"
                 android:text="Lorem Ipsum is simply dummy text of the printing and typesetting industry."
                 android:textColor="@color/toolbar_color"

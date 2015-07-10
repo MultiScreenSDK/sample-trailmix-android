@@ -133,9 +133,17 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         toolbar.setBackgroundColor(getResources().getColor(R.color.video_toolbar_background));
         appText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
         appText.setTypeface(Typeface.create("sans-serif-light", Typeface.NORMAL));
+        appText.setPadding(0,0,0,0);
 
         // Add back button in toolbar.
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        toolbar.setNavigationIcon(R.drawable.ic_arrow_back_white);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                finish();
+            }
+        });
 
         // Read the video information
         readPlaybackInfo();

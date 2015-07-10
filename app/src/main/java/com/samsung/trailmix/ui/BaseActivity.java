@@ -296,7 +296,7 @@ public class BaseActivity extends AppCompatActivity {
                 }
 
                 //Display alert dialog with customized layout.
-                alertDialog = new AlertDialog.Builder(BaseActivity.this, R.style.CustomTheme_Dialog).create();
+                alertDialog = new AlertDialog.Builder(BaseActivity.this, R.style.CustomTheme_Dialog_Transparent).create();
                 alertDialog.setView(toastLayout);
                 alertDialog.setCanceledOnTouchOutside(false);
                 alertDialog.show();
@@ -336,7 +336,7 @@ public class BaseActivity extends AppCompatActivity {
                 }
 
                 //Display alert dialog with customized layout.
-                alertDialog = new AlertDialog.Builder(BaseActivity.this, R.style.CustomTheme_Dialog).create();
+                alertDialog = new AlertDialog.Builder(BaseActivity.this, R.style.CustomTheme_Dialog_Transparent).create();
                 alertDialog.setView(toastLayout);
                 alertDialog.setCanceledOnTouchOutside(true);
                 alertDialog.show();

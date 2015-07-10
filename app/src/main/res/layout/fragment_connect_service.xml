@@ -46,10 +46,10 @@
 
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#D1D1D1" />
+        <!--<View-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="1dp"-->
+            <!--android:background="#D1D1D1" />-->
 
         <ListView
             android:id="@+id/deviceListView"
@@ -103,10 +103,10 @@
 
         </LinearLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="#D1D1D1" />
+        <!--<View-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="1dp"-->
+            <!--android:background="#D1D1D1" />-->
 
         <com.andexert.library.RippleView
             android:id="@+id/buttonRipple"
