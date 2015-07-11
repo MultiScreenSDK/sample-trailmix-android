@@ -36,6 +36,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 import com.samsung.trailmix.R;
+import com.samsung.trailmix.multiscreen.MultiscreenManager;
 
 public class JoinOverwriteFragment extends DialogFragment {
     // The TV name.
@@ -153,9 +154,11 @@ public class JoinOverwriteFragment extends DialogFragment {
         dialog.setOnKeyListener(new Dialog.OnKeyListener() {
 
             @Override
-            public boolean onKey(DialogInterface arg0, int keyCode,
+            public boolean onKey(DialogInterface dialogInterface, int keyCode,
                                  KeyEvent event) {
                 if (keyCode == KeyEvent.KEYCODE_BACK) {
+                    dialogInterface.dismiss();
+                    MultiscreenManager.getInstance().disconnect();
                     return true;
                 }
                 return false;

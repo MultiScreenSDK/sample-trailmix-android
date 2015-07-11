@@ -616,8 +616,9 @@ public class MultiscreenManager {
 
     /**
      * Play the video from with given start time.
+     * @param time the start time in seconds.
      */
-    public void play(MetaData metaData, int time) {
+    public void play(MetaData metaData, float time) {
         if (metaData != null) {
             JSONObject jo = metaData.getJsonObject();
             try {

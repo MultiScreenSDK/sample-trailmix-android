@@ -101,6 +101,9 @@ public class MainActivity extends BaseActivity {
     // The flag shows it is seeking to a new position. The video status event will be ignored during seeking.
     boolean isSeeking = false;
 
+    //When is seeking, we will not update the seek bar until this value is reached.
+    int expectedSeekbarValue;
+
     // Switching video when it is true.
     boolean isSwitchingVideo = false;
 
@@ -259,16 +262,39 @@ public class MainActivity extends BaseActivity {
     public void onEvent(VideoStatusEvent event) {
         Util.d("MainActivity  VideoStatusEvent: " + event.status);
 
-        // Only handle the event when it is not seeking.
-        if (!isSeeking) {
-            currentStatus = event.status;
+        if (!event.status.getId().equals(metaData.getId())) {
+            Util.d("MainActivity  status of video is different from target video, ignore.");
 
-            //Retrieve the metadata if it is null.
-            if (metaData == null) {
-                metaData = findMetaDataById(currentStatus.getId());
-            }
-            updateUI();
+            return;
         }
+
+        if (isSwitchingVideo) {
+            if ((int) event.status.getTime() == 0) {
+                isSwitchingVideo = false;
+            } else {
+                Util.d("MainActivity  switching to new video, ignore the wrong data.");
+                return;
+            }
+        }
+
+        if (isSeeking) {
+            if ((int) event.status.getTime() == expectedSeekbarValue) {
+                isSeeking = false;
+            } else {
+                Util.d("MainActivity  in the seeking mode, ignore the status update.");
+                return;
+            }
+        }
+
+
+        // Only handle the event when it is not seeking.
+        currentStatus = event.status;
+
+        //Retrieve the metadata if it is null.
+        if (metaData == null) {
+            metaData = findMetaDataById(currentStatus.getId());
+        }
+        updateUI();
     }
 
     // This method will be called when a app state event is received.
@@ -277,10 +303,6 @@ public class MainActivity extends BaseActivity {
 
         // Set play control button according to playback state.
         if (event.isStart()) {
-            //Util.d("MainActivity  PlaybackEvent isStart: " + event.isStart());
-            //Util.d("MainActivity  PlaybackEvent isSwitchingVideo: " + isSwitchingVideo);
-
-            isSwitchingVideo = false;
             playControl.setState(PlayControlImageView.State.play);
 
             // Show notification
@@ -308,12 +330,11 @@ public class MainActivity extends BaseActivity {
 
         // We only handle disconnect event.
         if (event.errorMessage == null) {
-
-            // Update the connected service name or app name.
-            appText.setText(mMultiscreenManager.isTVConnected() ? Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName()) : getString(R.string.app_name));
-
             if (!mMultiscreenManager.isTVConnected()) {
                 handleDisconnect();
+            } else {
+                //Send app state request when TV is connected.
+                mMultiscreenManager.requestAppState();
             }
         }
     }
@@ -324,8 +345,12 @@ public class MainActivity extends BaseActivity {
      * The video will be started at given position.
      */
     public void overwritePlaying(String metatdata) {
-        metaData = MetaData.parse(metatdata,MetaData.class);
-        mMultiscreenManager.play(metaData);
+        metaData = MetaData.parse(metatdata, MetaData.class);
+
+        if (currentStatus != null) {
+            currentStatus.setTime(0);
+        }
+        play();
     }
 
 
@@ -343,8 +368,10 @@ public class MainActivity extends BaseActivity {
         // Remove notification.
         clearNotification();
 
-        // Continue to play the video with local player.
-        openLocalVideoPlayer();
+        // Continue to play the video with local player if the video is not ended.
+        if (playControl.getState() != PlayControlImageView.State.retry) {
+            openLocalVideoPlayer();
+        }
 
         // Hide the playback control panel.
         currentStatus = null;
@@ -412,17 +439,9 @@ public class MainActivity extends BaseActivity {
 
                 // Seek bar is changed.
                 isSeeking = true;
+                expectedSeekbarValue = seekBar.getProgress();
                 postionTextView.setText(Util.formatTimeString(seekBar.getProgress() * 1000));
                 mMultiscreenManager.seek(seekBar.getProgress());
-
-                // Give some time to located to new position.
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Seeking is done now.
-                        isSeeking = false;
-                    }
-                }, 2000);
             }
         });
 
@@ -433,16 +452,11 @@ public class MainActivity extends BaseActivity {
     private void handleOnPlayControlButtonClick() {
         PlayControlImageView.State state = playControl.getState();
         if (state == PlayControlImageView.State.retry) {
-
-            // Replay from beginning.
-            play();
-            playControl.setState(PlayControlImageView.State.play);
+            replay();
         } else if (state == PlayControlImageView.State.pause) {
-            play();
-            playControl.setState(PlayControlImageView.State.play);
+            resume();
         } else {
-            mMultiscreenManager.pause();
-            playControl.setState(PlayControlImageView.State.pause);
+            pause();
         }
 
         showNotification();
@@ -505,9 +519,7 @@ public class MainActivity extends BaseActivity {
                 durationTextView.setText(Util.formatTimeString(duration * 1000));
 
                 updateMediaPosition((int) currentStatus.getTime());
-//                int position = (int) currentStatus.getTime();
-//                seekBar.setProgress(position);
-//                postionTextView.setText(Util.formatTimeString(position * 1000));
+
 
                 if (playControl.getState() != PlayControlImageView.State.retry) {
                     playControl.setState(currentStatus.isPlaying() ? PlayControlImageView.State.play : PlayControlImageView.State.pause);
@@ -535,13 +547,14 @@ public class MainActivity extends BaseActivity {
 
     private void updateMediaPosition(int position) {
         // Ignore the wrong position when error happens.
-        if (position>seekBar.getMax()) {
+        if (position > seekBar.getMax()) {
             Util.d("updateMediaPosition ignore wrong position at: " + position);
+            Util.d("updateMediaPosition seekbar max: " + seekBar.getMax());
             return;
         }
 
         seekBar.setProgress(position);
-        postionTextView.setText(Util.formatTimeString(position*1000));
+        postionTextView.setText(Util.formatTimeString(position * 1000));
     }
 
     /**
@@ -583,17 +596,41 @@ public class MainActivity extends BaseActivity {
 
 
     /**
-     * Play a new video on TV.
+     * Play a video on TV.
      */
     private void play() {
         Util.d("play() is called, metadata=" + metaData);
         if (metaData != null) {
-
             mMultiscreenManager.play(metaData);
+            playControl.setState(PlayControlImageView.State.play);
+        }
+    }
 
-            // Reset the progressbar.
-            seekBar.setProgress(0);
-            seekBar.setMax(metaData.getDuration());
+
+    /**
+     * Resume video from current position.
+     */
+    private void resume() {
+        mMultiscreenManager.resume();
+        playControl.setState(PlayControlImageView.State.play);
+    }
+
+    /**
+     * Pause video.
+     */
+    private void pause() {
+        mMultiscreenManager.pause();
+        playControl.setState(PlayControlImageView.State.pause);
+    }
+
+    /**
+     * Play a new video on TV from beginning.
+     */
+    private void replay() {
+        Util.d("replay() is called, metadata=" + metaData);
+        if (metaData != null) {
+            mMultiscreenManager.play(metaData, 0);
+            playControl.setState(PlayControlImageView.State.play);
         }
     }
 
@@ -625,6 +662,7 @@ public class MainActivity extends BaseActivity {
 
     /**
      * Create notification and set its state.
+     *
      * @param metaData
      * @return
      */
@@ -654,7 +692,7 @@ public class MainActivity extends BaseActivity {
                 .setAutoCancel(false)
                 .setContentTitle("Boarding pass")
                 .setContentText("Click for more info")
-                // Set PendingIntent into Notification
+                        // Set PendingIntent into Notification
                 .setContentIntent(pIntent).build();
 
         // Do not clear the notification
@@ -669,7 +707,7 @@ public class MainActivity extends BaseActivity {
         if (playControl.getState() == PlayControlImageView.State.play) {
             switchIntent = new Intent(PlayActionBroadcastReceiver.ACTION_PAUSE);
             notificationView.setImageViewResource(R.id.playControl, R.drawable.ic_pause_dark_sm);
-        }else if (playControl.getState() == PlayControlImageView.State.pause) {
+        } else if (playControl.getState() == PlayControlImageView.State.pause) {
             switchIntent = new Intent(PlayActionBroadcastReceiver.ACTION_PLAY);
             notificationView.setImageViewResource(R.id.playControl, R.drawable.ic_play_dark_sm);
         } else {
@@ -716,7 +754,8 @@ public class MainActivity extends BaseActivity {
         if (broadcastReceiver != null) {
             try {
                 unregisterReceiver(broadcastReceiver);
-            }catch (Exception e){}
+            } catch (Exception e) {
+            }
         }
 
         broadcastReceiver = null;

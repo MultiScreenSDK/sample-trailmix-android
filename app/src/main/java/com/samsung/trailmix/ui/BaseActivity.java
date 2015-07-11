@@ -168,16 +168,6 @@ public class BaseActivity extends AppCompatActivity {
 
             //When service is connected, we stop discovery.
             mMultiscreenManager.stopDiscovery();
-
-            //Send app state request when TV is connected.
-            if (this instanceof MainActivity) {
-                mMultiscreenManager.requestAppState();
-            }
-
-            //If it is video screen, exit to main screen.
-//            if (this instanceof VideoActivity) {
-//                finish();
-//            }
         } else if (event.errorMessage != null) {
             //Error happens.
             Util.e(event.errorMessage);

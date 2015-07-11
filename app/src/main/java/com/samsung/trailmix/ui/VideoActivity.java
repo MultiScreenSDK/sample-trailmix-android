@@ -245,19 +245,41 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     @Override
     public void onPause() {
         super.onPause();
-        if (!enableBackgroundAudio) {
-            currentStatus.setTime(player.getCurrentPosition());
-            releasePlayer();
-        } else {
-            player.setBackgrounded(true);
-        }
+
+
+
+//        if (!enableBackgroundAudio) {
+//
+//            //The time in player is milliseconds while in currentStatus is seconds.
+//            currentStatus.setTime(player.getCurrentPosition()/1000);
+//            releasePlayer();
+//        } else {
+//            player.setBackgrounded(true);
+//        }
 
         try {
             audioCapabilitiesReceiver.unregister();
         } catch (Exception e) {
         }
 
-        // Hide the shutter view.
+
+    }
+
+    public void onStop() {
+        super.onStop();
+
+        com.samsung.trailmix.util.Util.d("onPause, enableBackgroundAudio=" + enableBackgroundAudio);
+
+        if (!enableBackgroundAudio) {
+
+            //The time in player is milliseconds while in currentStatus is seconds.
+            currentStatus.setTime(player.getCurrentPosition()/1000);
+            releasePlayer();
+        } else {
+            player.setBackgrounded(true);
+        }
+
+        // Show the shutter view.
         shutterView.setVisibility(View.VISIBLE);
     }
 
@@ -265,6 +287,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     public void onDestroy() {
         super.onDestroy();
 
+        com.samsung.trailmix.util.Util.d("onDestroy is called");
         // Release player and resource before exit.
         releasePlayer();
     }
@@ -289,16 +312,28 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
     };
 
+    /**
+     * Update the seek bar and time text.
+     * @param position the time in milliseconds.
+     */
     private void updateMediaPosition(int position) {
+        com.samsung.trailmix.util.Util.d("updateMediaPosition position: " + position);
+        com.samsung.trailmix.util.Util.d("updateMediaPosition seek bar max: " + seekBar.getMax());
+
         // Ignore the wrong position when error happens.
         if (position>seekBar.getMax()) {
+            com.samsung.trailmix.util.Util.d("updateMediaPosition seek bar max: " + seekBar.getMax());
             com.samsung.trailmix.util.Util.d("updateMediaPosition ignore wrong position at: " + position);
             return;
         }
 
         seekBar.setProgress(position);
         postionTextView.setText(com.samsung.trailmix.util.Util.formatTimeString(position));
-        currentStatus.setTime(position/1000);
+
+        //Time and duration in seconds as float.
+        float ct = position/1000.0f;
+        com.samsung.trailmix.util.Util.d("updateMediaPosition currentStatus time: " + ct);
+        currentStatus.setTime(ct);
     }
 
     /**
@@ -336,7 +371,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             metaData = new MetaData();
             metaData.setId("big-buck-bunny");
             metaData.setTitle("Big Buck Bunny");
-            metaData.setDuration(33000);
+            metaData.setDuration(33);
             metaData.setCover("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.png");
             metaData.setType("mp4");
             metaData.setFile("http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/trailers/big-buck-bunny.mp4");
@@ -441,6 +476,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      * Repleae the player and related resource.
      */
     private void releasePlayer() {
+        com.samsung.trailmix.util.Util.d("release player...");
+
         // Cancel media position update.
         handler.removeCallbacks(updateMediaPosition);
 
@@ -468,6 +505,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     private void play() {
         player.getPlayerControl().start();
         playControlImageView.setState(PlayControlImageView.State.play);
+
+        //Start to update media time.
+        handler.postDelayed(updateMediaPosition, 1000);
+
     }
 
     /**
@@ -476,6 +517,9 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     private void pause() {
         player.getPlayerControl().pause();
         playControlImageView.setState(PlayControlImageView.State.pause);
+
+        //Stop update media time.
+        handler.removeCallbacks(updateMediaPosition);
     }
 
     /**
@@ -684,8 +728,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 // Show the panels when video is started.
                 showPanels(View.VISIBLE);
 
-                // Update seek bar.
-                handler.postDelayed(updateMediaPosition, 1000);
+                // Update seek bar when it is playing.
+                if (playWhenReady) {
+                    handler.postDelayed(updateMediaPosition, 1000);
+                }
 
                 break;
             default:
@@ -812,6 +858,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                 //Same video, check if played at same position.
                 if (event.status.getTime() == currentStatus.getTime()) {
                     //Played at same position, just join the video automatically.
+                    com.samsung.trailmix.util.Util.d("TV is playing the same video. Join it automatically");
                     finish();
                 } else {
 
@@ -825,13 +872,15 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         } else {
 
             // Nothing is played, play current video.
-            mMultiscreenManager.play(metaData);
+            mMultiscreenManager.play(metaData, currentStatus.getTime());
 
             // Exit the local player.
             finish();
         }
 
         currentStatus = event.status;
+        com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
+        com.samsung.trailmix.util.Util.d("VideoActivity  currentStatus: " + currentStatus);
     }
 
     /**
@@ -839,7 +888,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      * The video will be started at given position.
      */
     public void overwritePlaying() {
-        mMultiscreenManager.play(metaData, (int)currentStatus.getTime());
+        mMultiscreenManager.play(metaData, currentStatus.getTime());
     }
 
 }
