@@ -75,12 +75,12 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/service_list_item_height"
             android:background="@color/accent_color"
+            android:gravity="center"
             android:orientation="horizontal"
             android:paddingBottom="6dp"
             android:paddingLeft="16dp"
             android:paddingRight="16dp"
-            android:paddingTop="6dp"
-            android:gravity="center">
+            android:paddingTop="6dp">
 
             <ImageView
                 android:id="@+id/selectedServiceIcon"
@@ -94,9 +94,11 @@
                 android:id="@+id/selectedServiceText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
                 android:layout_gravity="center_vertical"
-                android:gravity="center"
+                android:layout_marginLeft="5dp"
+                android:ellipsize="end"
+                android:gravity="left"
+                android:maxLines="1"
                 android:text="Samsung"
                 android:textColor="@color/connect_to_header_color"
                 android:textSize="18sp" />
@@ -132,8 +134,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center_vertical"
-                android:gravity="center"
                 android:clickable="true"
+                android:gravity="center"
                 android:stateListAnimator="@anim/button_elevation"
                 android:text="Disconnect"
                 android:textColor="@color/service_list_item"
