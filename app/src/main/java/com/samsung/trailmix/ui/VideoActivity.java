@@ -246,23 +246,10 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
     public void onPause() {
         super.onPause();
 
-
-
-//        if (!enableBackgroundAudio) {
-//
-//            //The time in player is milliseconds while in currentStatus is seconds.
-//            currentStatus.setTime(player.getCurrentPosition()/1000);
-//            releasePlayer();
-//        } else {
-//            player.setBackgrounded(true);
-//        }
-
         try {
             audioCapabilitiesReceiver.unregister();
         } catch (Exception e) {
         }
-
-
     }
 
     public void onStop() {
@@ -840,10 +827,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
         com.samsung.trailmix.util.Util.d("VideoActivity  currentStatus: " + currentStatus);
 
-
+        //Get the video id.
         String currentPlayingId = event.status.getId();
-
-
 
         if (currentPlayingId != null) {
 
@@ -867,7 +852,6 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
                     String name = com.samsung.trailmix.util.Util.getFriendlyTvName(mMultiscreenManager.getConnectedService().getName());
                     showJoinOverwritetDialog(name, currentStatus.getTitle(), metaData.toJsonString());
                 }
-
             }
         } else {
 
@@ -879,8 +863,6 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         }
 
         currentStatus = event.status;
-        com.samsung.trailmix.util.Util.d("VideoActivity  AppStateEvent: " + event.status);
-        com.samsung.trailmix.util.Util.d("VideoActivity  currentStatus: " + currentStatus);
     }
 
     /**
@@ -889,6 +871,11 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      */
     public void overwritePlaying() {
         mMultiscreenManager.play(metaData, currentStatus.getTime());
+
+        //Make sure the TV is paused as well when local player is paused.
+        if (playControlImageView.getState()== PlayControlImageView.State.pause) {
+            mMultiscreenManager.pause();
+        }
     }
 
 }
