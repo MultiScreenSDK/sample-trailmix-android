@@ -856,7 +856,7 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
         } else {
 
             // Nothing is played, play current video.
-            mMultiscreenManager.play(metaData, currentStatus.getTime());
+            overwritePlaying();
 
             // Exit the local player.
             finish();
