@@ -628,6 +628,8 @@ public class MainActivity extends BaseActivity {
      */
     private void replay() {
         Util.d("replay() is called, metadata=" + metaData);
+
+        isSeeking = false;
         if (metaData != null) {
             mMultiscreenManager.play(metaData, 0);
             playControl.setState(PlayControlImageView.State.play);
