@@ -110,6 +110,9 @@ public class MainActivity extends BaseActivity {
     // The broadcast listener to receive play action from notification.
     PlayActionBroadcastReceiver broadcastReceiver;
 
+    // The notification shown when playing video on TV.
+    private  Notification notification;
+
     //==============================================================================================
     //      Activity methods
     //==============================================================================================
@@ -645,9 +648,6 @@ public class MainActivity extends BaseActivity {
     private void showNotification() {
         Notification notification = getNotification(metaData);
         if (notification != null) {
-            // Clear previous notification.
-            clearNotification();
-
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.notify(NOTIFICATION_ID, notification);
         }
@@ -676,36 +676,41 @@ public class MainActivity extends BaseActivity {
             return null;
         }
 
-        // Using RemoteViews to bind custom layouts into Notification
-        RemoteViews notificationView = new RemoteViews(
-                getApplicationContext().getPackageName(), R.layout.notification
-        );
-
-        // Locate and set the Text into customnotificationtext.xml TextViews
-        notificationView.setTextViewText(R.id.content, metaData.getTitle());
-
-
         // Create pending intent and notification instance.
         PendingIntent pIntent = PendingIntent.getActivity(
                 this,
                 NOTIFICATION_ID,
                 getIntent(),
                 PendingIntent.FLAG_UPDATE_CURRENT);
-        Notification n = new NotificationCompat.Builder(getApplicationContext())
-                // Set Icon
-                .setSmallIcon(R.drawable.appicon_trailmix)
-                .setAutoCancel(false)
-                .setContentTitle("Boarding pass")
-                .setContentText("Click for more info")
-                        // Set PendingIntent into Notification
-                .setContentIntent(pIntent).build();
 
-        // Do not clear the notification
-        n.flags |= FLAG_NO_CLEAR;
+        RemoteViews notificationView = null;
+        if (notification == null) {
+            notification = new NotificationCompat.Builder(getApplicationContext())
+                    // Set Icon
+                    .setSmallIcon(R.drawable.appicon_trailmix)
+                    .setAutoCancel(false)
+                    .setShowWhen(false)
+                    .setWhen(0)
+                            // Set PendingIntent into Notification
+                    .setContentIntent(pIntent).build();
+
+            // Do not clear the notification
+            notification.flags |= FLAG_NO_CLEAR;
+
+            // Using RemoteViews to bind custom layouts into Notification
+            notificationView = new RemoteViews(
+                    getApplicationContext().getPackageName(), R.layout.notification
+            );
+        } else {
+            notificationView = notification.contentView;
+        }
+
+        // Locate and set the Text into customnotificationtext.xml TextViews
+        notificationView.setTextViewText(R.id.content, metaData.getTitle());
 
         //Load the cover image.
         Picasso.with(this).load(Uri.parse(metaData.getCover())).
-                into(notificationView, R.id.coverImage, NOTIFICATION_ID, n);
+                into(notificationView, R.id.coverImage, NOTIFICATION_ID, notification);
 
         // This is the intent that is supposed to be called when the playback button is clicked
         Intent switchIntent = null;
@@ -723,10 +728,15 @@ public class MainActivity extends BaseActivity {
         PendingIntent pendingSwitchIntent = PendingIntent.getBroadcast(this, 0, switchIntent, 0);
         notificationView.setOnClickPendingIntent(R.id.playControl, pendingSwitchIntent);
 
-        // Use customized layout.
-        n.contentView = notificationView;
+        //PendingIntent for close button.
+        Intent closeIntent = new Intent(PlayActionBroadcastReceiver.ACTION_CLOSE);
+        PendingIntent pendingCloseIntent = PendingIntent.getBroadcast(this, 0, closeIntent, 0);
+        notificationView.setOnClickPendingIntent(R.id.close_action, pendingCloseIntent);
 
-        return n;
+        // Use customized layout.
+        notification.contentView = notificationView;
+
+        return notification;
     }
 
     /**
@@ -746,6 +756,7 @@ public class MainActivity extends BaseActivity {
         intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_PLAY);
         intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_PAUSE);
         intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_REPLAY);
+        intentFilter.addAction(PlayActionBroadcastReceiver.ACTION_CLOSE);
 
         // register the receiver
         broadcastReceiver = new PlayActionBroadcastReceiver();
@@ -773,10 +784,15 @@ public class MainActivity extends BaseActivity {
         public static final String ACTION_PLAY = "com.samsung.trailmix.ACTION_PLAY";
         public static final String ACTION_PAUSE = "com.samsung.trailmix.ACTION_PAUSE";
         public static final String ACTION_REPLAY = "com.samsung.trailmix.ACTION_REPLAY";
+        public static final String ACTION_CLOSE = "com.samsung.trailmix.ACTION_CLOSE";
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            handleOnPlayControlButtonClick();
+            if (intent.getAction().equals(ACTION_CLOSE)) {
+                clearNotification();
+            } else {
+                handleOnPlayControlButtonClick();
+            }
         }
     }
 }
