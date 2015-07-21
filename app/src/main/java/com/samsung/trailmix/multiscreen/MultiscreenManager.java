@@ -618,11 +618,12 @@ public class MultiscreenManager {
      * Play the video from with given start time.
      * @param time the start time in seconds.
      */
-    public void play(MetaData metaData, float time) {
+    public void play(MetaData metaData, float time, String state) {
         if (metaData != null) {
             JSONObject jo = metaData.getJsonObject();
             try {
                 jo.put("time", time);
+                jo.put("state", state);
             } catch (JSONException e) {
             }
             sendToTV(CMD_PLAY, jo, Message.TARGET_HOST);

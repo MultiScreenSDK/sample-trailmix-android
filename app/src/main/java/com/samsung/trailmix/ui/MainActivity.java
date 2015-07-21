@@ -173,19 +173,22 @@ public class MainActivity extends BaseActivity {
         // Stop any working thread.
         loadLibExecutor.shutdownNow();
 
-        // Stop discovery if it is running.
-        if (mMultiscreenManager.isDiscovering()) {
-            mMultiscreenManager.stopDiscovery();
+        try {
+            // Stop discovery if it is running.
+            if (mMultiscreenManager.isDiscovering()) {
+                mMultiscreenManager.stopDiscovery();
+            }
+
+            // Disconnect from multiscreen app.
+            mMultiscreenManager.disconnect();
+
+            // Release multiscreen manager
+            mMultiscreenManager.release();
+            mMultiscreenManager = null;
+
+            clearNotification();
+        }catch (Exception e) {
         }
-
-        // Disconnect from multiscreen app.
-        mMultiscreenManager.disconnect();
-
-        // Release multiscreen manager
-        mMultiscreenManager.release();
-        mMultiscreenManager = null;
-
-        clearNotification();
 
         super.onDestroy();
     }
@@ -631,7 +634,7 @@ public class MainActivity extends BaseActivity {
 
         isSeeking = false;
         if (metaData != null) {
-            mMultiscreenManager.play(metaData, 0);
+            mMultiscreenManager.play(metaData, 0, "play");
             playControl.setState(PlayControlImageView.State.play);
         }
     }

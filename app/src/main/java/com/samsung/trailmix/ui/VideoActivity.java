@@ -841,7 +841,8 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
             } else {
 
                 //Same video, check if played at same position.
-                if (event.status.getTime() == currentStatus.getTime()) {
+                //We use int type to compare to ignore the tiny position difference.
+                if ((int)event.status.getTime() == (int)currentStatus.getTime()) {
                     //Played at same position, just join the video automatically.
                     com.samsung.trailmix.util.Util.d("TV is playing the same video. Join it automatically");
                     finish();
@@ -870,12 +871,16 @@ public class VideoActivity extends BaseActivity implements SurfaceHolder.Callbac
      * The video will be started at given position.
      */
     public void overwritePlaying() {
-        mMultiscreenManager.play(metaData, currentStatus.getTime());
+        String state = "play";
 
         //Make sure the TV is paused as well when local player is paused.
         if (playControlImageView.getState()== PlayControlImageView.State.pause) {
-            mMultiscreenManager.pause();
+            state = "paused";
         }
+
+        mMultiscreenManager.play(metaData, currentStatus.getTime(), state);
+
+
     }
 
 }
