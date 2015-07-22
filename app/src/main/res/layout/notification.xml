@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="450dp"
+    android:layout_width="match_parent" android:layout_height="80dp"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:background="@color/notification_background">
 
@@ -11,7 +11,6 @@
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"
         android:src="@android:drawable/ic_menu_close_clear_cancel"/>
-
 
     <ImageView
         android:id="@+id/playControl"
@@ -27,6 +26,7 @@
         android:layout_height="match_parent"
         android:paddingRight="@dimen/activity_horizontal_margin"
         android:orientation="horizontal"
+        android:layout_centerVertical="true"
         android:layout_toLeftOf="@+id/playControl">
 
         <ImageView

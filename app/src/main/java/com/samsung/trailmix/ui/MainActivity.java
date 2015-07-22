@@ -34,7 +34,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompat;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.LinearLayout;
@@ -58,8 +57,6 @@ import com.squareup.picasso.Picasso;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static android.app.Notification.FLAG_NO_CLEAR;
 
 
 /**
@@ -93,7 +90,7 @@ public class MainActivity extends BaseActivity {
     private TextView durationTextView;
 
     // Create a fixed thread pool containing one thread
-    ExecutorService loadLibExecutor = Executors.newFixedThreadPool(1);
+    ExecutorService executor = Executors.newFixedThreadPool(10);
 
     // Current playing state
     CurrentStatus currentStatus;
@@ -169,12 +166,15 @@ public class MainActivity extends BaseActivity {
         });
 
         // Load library in background.
-        loadLibExecutor.submit(loadLibrary);
+        executor.submit(loadLibrary);
     }
 
     protected void onDestroy() {
         // Stop any working thread.
-        loadLibExecutor.shutdownNow();
+        try {
+            executor.shutdownNow();
+        }catch (Exception e){
+        }
 
         try {
             // Stop discovery if it is running.
@@ -265,14 +265,8 @@ public class MainActivity extends BaseActivity {
     }
 
     // This method will be called when a app state event is received.
-    public void onEvent(VideoStatusEvent event) {
+    public void onEvent(final VideoStatusEvent event) {
         Util.d("MainActivity  VideoStatusEvent: " + event.status);
-
-        if (!event.status.getId().equals(metaData.getId())) {
-            Util.d("MainActivity  status of video is different from target video, ignore.");
-
-            return;
-        }
 
         if (isSwitchingVideo) {
             if ((int) event.status.getTime() == 0) {
@@ -296,16 +290,23 @@ public class MainActivity extends BaseActivity {
         // Only handle the event when it is not seeking.
         currentStatus = event.status;
 
-        //Retrieve the metadata if it is null.
-        if (metaData == null) {
+        //Update metadata and notification.
+        boolean metaDataChanged = (metaData == null || !metaData.getId().equals(currentStatus.getId()));
+        if (metaDataChanged) {
             metaData = findMetaDataById(currentStatus.getId());
         }
+
         updateUI();
+
+        //Only update notification when meta data is changed.
+        if (metaDataChanged) {
+            showNotification();
+        }
+
     }
 
     // This method will be called when a app state event is received.
     public void onEvent(PlaybackEvent event) {
-        Util.d("MainActivity  PlaybackEvent: " + event.isStart());
 
         // Set play control button according to playback state.
         if (event.isStart()) {
@@ -650,9 +651,12 @@ public class MainActivity extends BaseActivity {
         if (notification != null) {
             NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             mNotificationManager.notify(NOTIFICATION_ID, notification);
-        }
 
-        registerBroadcastListener();
+            //Make sure only register once.
+            if (broadcastReceiver == null) {
+                registerBroadcastListener();
+            }
+        }
     }
 
     /**
@@ -661,6 +665,7 @@ public class MainActivity extends BaseActivity {
     private void clearNotification() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.cancel(NOTIFICATION_ID);
+        notification = null;
 
         unregisterBroadcastListener();
     }
@@ -676,36 +681,31 @@ public class MainActivity extends BaseActivity {
             return null;
         }
 
-        // Create pending intent and notification instance.
-        PendingIntent pIntent = PendingIntent.getActivity(
-                this,
-                NOTIFICATION_ID,
-                getIntent(),
-                PendingIntent.FLAG_UPDATE_CURRENT);
-
-        RemoteViews notificationView = null;
         if (notification == null) {
-            notification = new NotificationCompat.Builder(getApplicationContext())
-                    // Set Icon
-                    .setSmallIcon(R.drawable.appicon_trailmix)
+
+            // Create pending intent and notification instance.
+            PendingIntent pIntent = PendingIntent.getActivity(
+                    this,
+                    NOTIFICATION_ID,
+                    getIntent(),
+                    PendingIntent.FLAG_UPDATE_CURRENT);
+
+            notification = new Notification.Builder(getApplicationContext())
+                    .setSmallIcon(R.drawable.appicon_trailmix)  //Set Icon, required.
                     .setAutoCancel(false)
                     .setShowWhen(false)
-                    .setWhen(0)
-                            // Set PendingIntent into Notification
-                    .setContentIntent(pIntent).build();
+                    .setContentIntent(pIntent).build(); // Set PendingIntent into Notification
 
             // Do not clear the notification
-            notification.flags |= FLAG_NO_CLEAR;
-
-            // Using RemoteViews to bind custom layouts into Notification
-            notificationView = new RemoteViews(
-                    getApplicationContext().getPackageName(), R.layout.notification
-            );
-        } else {
-            notificationView = notification.contentView;
+            notification.flags |= Notification.FLAG_NO_CLEAR;
         }
 
-        // Locate and set the Text into customnotificationtext.xml TextViews
+
+
+        // Using RemoteViews to bind custom layouts into Notification
+        RemoteViews notificationView = new RemoteViews(MainActivity.this.getPackageName(), R.layout.notification);
+
+        // Set the Video title.
         notificationView.setTextViewText(R.id.content, metaData.getTitle());
 
         //Load the cover image.
@@ -734,7 +734,15 @@ public class MainActivity extends BaseActivity {
         notificationView.setOnClickPendingIntent(R.id.close_action, pendingCloseIntent);
 
         // Use customized layout.
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//            notification.contentView = notificationView;
+//        } else {
+//            notification.contentView = notificationView;
+//            notification.bigContentView = notificationView;
+//        }
+
         notification.contentView = notificationView;
+        notification.bigContentView = notificationView;
 
         return notification;
     }
@@ -788,6 +796,8 @@ public class MainActivity extends BaseActivity {
 
         @Override
         public void onReceive(Context context, Intent intent) {
+            Util.d("onReceive notification action: " + intent.getAction());
+
             if (intent.getAction().equals(ACTION_CLOSE)) {
                 clearNotification();
             } else {
