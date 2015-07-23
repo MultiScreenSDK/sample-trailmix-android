@@ -278,7 +278,7 @@ public class MainActivity extends BaseActivity {
         }
 
         if (isSeeking) {
-            if ((int) event.status.getTime() == expectedSeekbarValue) {
+            if ((int) event.status.getTime() >= expectedSeekbarValue) {
                 isSeeking = false;
             } else {
                 Util.d("MainActivity  in the seeking mode, ignore the status update.");

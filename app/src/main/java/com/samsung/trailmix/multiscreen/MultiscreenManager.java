@@ -658,6 +658,7 @@ public class MultiscreenManager {
      * seek the current playing video.
      */
     public void seek(float position) {
+        Util.d("Seek function is called with position:" + position);
         sendToTV(CMD_SEEK, position, Message.TARGET_HOST);
     }
 

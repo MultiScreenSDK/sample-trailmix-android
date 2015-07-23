@@ -4,7 +4,7 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
 
-    <dimen name="elevation_low">@dimen/cardview_default_elevation</dimen>
+    <dimen name="elevation_low">2dp</dimen>
     <dimen name="elevation_high">6dp</dimen>
 
 
