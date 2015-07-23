@@ -448,7 +448,14 @@ public class MainActivity extends BaseActivity {
                 isSeeking = true;
                 expectedSeekbarValue = seekBar.getProgress();
                 postionTextView.setText(Util.formatTimeString(seekBar.getProgress() * 1000));
-                mMultiscreenManager.seek(seekBar.getProgress());
+
+                //If the video is finished, we will play automatically from the point.
+                if (playControl.getState() == PlayControlImageView.State.retry) {
+                    mMultiscreenManager.play(metaData, seekBar.getProgress(), null);
+                    playControl.setState(PlayControlImageView.State.play);
+                } else {
+                    mMultiscreenManager.seek(seekBar.getProgress());
+                }
             }
         });
 
@@ -638,7 +645,7 @@ public class MainActivity extends BaseActivity {
 
         isSeeking = false;
         if (metaData != null) {
-            mMultiscreenManager.play(metaData, 0, "play");
+            mMultiscreenManager.play(metaData, 0, null);
             playControl.setState(PlayControlImageView.State.play);
         }
     }
