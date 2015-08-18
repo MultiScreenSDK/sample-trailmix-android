@@ -2,5 +2,5 @@
 <resources>
     <string name="app_url">http://s3-us-west-1.amazonaws.com/dev-multiscreen-examples/examples/trailmix/tv/index.html</string>
     <string name="channel_id">com.samsung.trailmix</string>
-    <string name="playlist_url">http://dev-multiscreen.samsung.com/examples/trailmix/trailers/library.json</string>
+    <string name="playlist_url">http://multiscreen.samsung.com/examples/trailmix/trailers/library.json</string>
 </resources>
