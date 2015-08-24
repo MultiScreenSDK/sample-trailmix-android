@@ -41,8 +41,8 @@ android {
     defaultConfig {
         minSdkVersion 17
         targetSdkVersion 21
-        versionCode 103
-        versionName '1.1.1'
+        versionCode 104
+        versionName '1.1.2'
     }
 
     packagingOptions {
